@@ -136,7 +136,6 @@ final class WallpaperCatalogModel: ObservableObject {
         defer { downloadingID = nil }
 
         do {
-            let fingerprint = deviceFingerprint()
             let url = try await resolveDownloadURL(for: item)
             let (data, response) = try await session.data(from: url)
             try validate(response, data: data)
@@ -179,9 +178,7 @@ final class WallpaperCatalogModel: ObservableObject {
         for query in keychainQueries(service: key) {
             var result: CFTypeRef?
             if SecItemCopyMatching(query as CFDictionary, &result) == errSecSuccess,
-               let data = result as? Data,
-               let existing = String(data: data, encoding: .utf8),
-               let normalized = normalizedFingerprint(existing) {
+               let normalized = fingerprint(from: result) {
                 UserDefaults.standard.set(normalized, forKey: key)
                 return normalized
             }
@@ -197,6 +194,34 @@ final class WallpaperCatalogModel: ObservableObject {
         UserDefaults.standard.set(value, forKey: key)
         saveFingerprintToKeychain(value, service: key)
         return value
+    }
+
+    private func fingerprint(from result: CFTypeRef?) -> String? {
+        if let data = result as? Data,
+           let value = String(data: data, encoding: .utf8) {
+            return normalizedFingerprint(value)
+        }
+        if let value = result as? String {
+            return normalizedFingerprint(value)
+        }
+        if let attributes = result as? [String: Any] {
+            if let data = attributes[kSecValueData as String] as? Data,
+               let value = String(data: data, encoding: .utf8) {
+                return normalizedFingerprint(value)
+            }
+            if let generic = attributes[kSecAttrGeneric as String] as? Data,
+               let value = String(data: generic, encoding: .utf8) {
+                return normalizedFingerprint(value)
+            }
+        }
+        if let matches = result as? [[String: Any]] {
+            for match in matches {
+                if let value = fingerprint(from: match as CFTypeRef?) {
+                    return value
+                }
+            }
+        }
+        return nil
     }
 
     private func normalizedFingerprint(_ value: String) -> String? {
@@ -217,6 +242,28 @@ final class WallpaperCatalogModel: ObservableObject {
                 kSecClass as String: kSecClassGenericPassword,
                 kSecAttrService as String: "com.mutually.wallpaper",
                 kSecAttrAccount as String: "device_fp",
+                kSecReturnData as String: true,
+                kSecMatchLimit as String: kSecMatchLimitOne
+            ],
+            [
+                kSecClass as String: kSecClassGenericPassword,
+                kSecAttrService as String: service,
+                kSecAttrAccount as String: "device_fp",
+                kSecReturnAttributes as String: true,
+                kSecReturnData as String: true,
+                kSecMatchLimit as String: kSecMatchLimitOne
+            ],
+            [
+                kSecClass as String: kSecClassGenericPassword,
+                kSecAttrService as String: service,
+                kSecReturnAttributes as String: true,
+                kSecReturnData as String: true,
+                kSecMatchLimit as String: kSecMatchLimitAll
+            ],
+            [
+                kSecClass as String: kSecClassGenericPassword,
+                kSecAttrService as String: service,
+                kSecAttrGeneric as String: Data("device_fp".utf8),
                 kSecReturnData as String: true,
                 kSecMatchLimit as String: kSecMatchLimitOne
             ]
