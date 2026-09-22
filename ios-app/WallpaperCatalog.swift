@@ -86,6 +86,7 @@ final class WallpaperCatalogModel: ObservableObject {
     private let session: URLSession
     private let baseURL = URL(string: "https://wall-api.18ir.cn/api")!
     private var page = 1
+    private var fingerprintSource = "未知"
 
     init(session: URLSession = .shared) {
         self.session = session
@@ -150,7 +151,7 @@ final class WallpaperCatalogModel: ObservableObject {
             await AppViewModel.shared?.importTendieFiles(urls: [destination])
             errorMessage = nil
         } catch {
-            errorMessage = "壁纸下载失败：\(error.localizedDescription)"
+            errorMessage = "壁纸下载失败：\(error.localizedDescription)（设备标识：\(fingerprintSource)）"
         }
     }
 
@@ -179,6 +180,7 @@ final class WallpaperCatalogModel: ObservableObject {
             var result: CFTypeRef?
             if SecItemCopyMatching(query as CFDictionary, &result) == errSecSuccess,
                let normalized = fingerprint(from: result) {
+                fingerprintSource = "Keychain"
                 UserDefaults.standard.set(normalized, forKey: key)
                 return normalized
             }
@@ -186,11 +188,13 @@ final class WallpaperCatalogModel: ObservableObject {
 
         if let existing = UserDefaults.standard.string(forKey: key),
            let normalized = normalizedFingerprint(existing) {
+            fingerprintSource = "UserDefaults"
             saveFingerprintToKeychain(normalized, service: key)
             return normalized
         }
 
         let value = UUID().uuidString.replacingOccurrences(of: "-", with: "").lowercased()
+        fingerprintSource = "新生成"
         UserDefaults.standard.set(value, forKey: key)
         saveFingerprintToKeychain(value, service: key)
         return value
