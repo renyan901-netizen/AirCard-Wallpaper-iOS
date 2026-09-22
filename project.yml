@@ -34,5 +34,5 @@ targets:
         INFOPLIST_FILE: ios-app/Info.plist
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         # idevice's static lib pulls in C++ symbols (aws-lc); link libc++.
-        OTHER_LDFLAGS: "-lc++"
+        OTHER_LDFLAGS: "-lc++ -framework Security"
         GENERATE_INFOPLIST_FILE: NO

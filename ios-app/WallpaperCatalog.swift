@@ -1,5 +1,6 @@
 import Foundation
 import Combine
+import Security
 
 struct RemoteWallpaper: Identifiable, Codable, Equatable {
     let id: Int
@@ -175,15 +176,67 @@ final class WallpaperCatalogModel: ObservableObject {
 
     private func deviceFingerprint() -> String {
         let key = "com.mutually.wallpaper.device"
-        if let existing = UserDefaults.standard.string(forKey: key), !existing.isEmpty {
-            let normalized = existing.replacingOccurrences(of: "-", with: "").lowercased()
-            if normalized.count == 32 {
+        for query in keychainQueries(service: key) {
+            var result: CFTypeRef?
+            if SecItemCopyMatching(query as CFDictionary, &result) == errSecSuccess,
+               let data = result as? Data,
+               let existing = String(data: data, encoding: .utf8),
+               let normalized = normalizedFingerprint(existing) {
+                UserDefaults.standard.set(normalized, forKey: key)
                 return normalized
             }
         }
+
+        if let existing = UserDefaults.standard.string(forKey: key),
+           let normalized = normalizedFingerprint(existing) {
+            saveFingerprintToKeychain(normalized, service: key)
+            return normalized
+        }
+
         let value = UUID().uuidString.replacingOccurrences(of: "-", with: "").lowercased()
         UserDefaults.standard.set(value, forKey: key)
+        saveFingerprintToKeychain(value, service: key)
         return value
+    }
+
+    private func normalizedFingerprint(_ value: String) -> String? {
+        let normalized = value.replacingOccurrences(of: "-", with: "").lowercased()
+        return normalized.count == 32 && normalized.allSatisfy(\.isHexDigit) ? normalized : nil
+    }
+
+    private func keychainQueries(service: String) -> [[String: Any]] {
+        [
+            [
+                kSecClass as String: kSecClassGenericPassword,
+                kSecAttrService as String: service,
+                kSecAttrAccount as String: "device_fp",
+                kSecReturnData as String: true,
+                kSecMatchLimit as String: kSecMatchLimitOne
+            ],
+            [
+                kSecClass as String: kSecClassGenericPassword,
+                kSecAttrService as String: "com.mutually.wallpaper",
+                kSecAttrAccount as String: "device_fp",
+                kSecReturnData as String: true,
+                kSecMatchLimit as String: kSecMatchLimitOne
+            ]
+        ]
+    }
+
+    private func saveFingerprintToKeychain(_ value: String, service: String) {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: service,
+            kSecAttrAccount as String: "device_fp"
+        ]
+        let attributes: [String: Any] = [
+            kSecValueData as String: Data(value.utf8),
+            kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
+        ]
+        let status = SecItemAdd(query.merging(attributes) { _, new in new } as CFDictionary, nil)
+        if status == errSecDuplicateItem {
+            SecItemUpdate(query as CFDictionary, attributes as CFDictionary)
+        }
     }
 
     private func merge(_ newItems: [RemoteWallpaper]) {
