@@ -1,0 +1,58 @@
+name: Build AirCard-Wallpaper IPA
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Show toolchain
+        run: |
+          xcodebuild -version
+          swift --version
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+
+      - name: Build unsigned IPA
+        run: |
+          chmod +x build-ipa.sh
+          ./build-ipa.sh
+
+      - name: Report compiler errors
+        if: failure()
+        run: |
+          if [ -f build/xcodebuild.log ]; then
+            echo '--- compiler diagnostics ---'
+            grep -E '(^| )error:|fatal error:|BUILD FAILED|Command .* failed' build/xcodebuild.log | tail -n 40 || true
+            while IFS= read -r line; do
+              echo "::error::$line"
+            done < <(grep -E '(^| )error:|fatal error:' build/xcodebuild.log | tail -n 20 || true)
+          fi
+
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: AirCard-Wallpaper-iOS-unsigned
+          path: build/AirCard-iOS.ipa
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload build log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: AirCard-Wallpaper-iOS-build-log
+          path: build/xcodebuild.log
+          if-no-files-found: warn
+          retention-days: 14
