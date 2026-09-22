@@ -73,14 +73,6 @@ private struct DownloadPayload: Decodable {
     }
 }
 
-private struct UnlockGrantResponse: Decodable {
-    let success: Bool?
-    let ok: Bool?
-    let code: Int?
-    let message: String?
-    let error: String?
-}
-
 @MainActor
 final class WallpaperCatalogModel: ObservableObject {
     @Published private(set) var wallpapers: [RemoteWallpaper] = []
@@ -144,7 +136,6 @@ final class WallpaperCatalogModel: ObservableObject {
 
         do {
             let fingerprint = deviceFingerprint()
-            await requestFreeUnlock(for: item.id, fingerprint: fingerprint)
             let url = try await resolveDownloadURL(for: item)
             let (data, response) = try await session.data(from: url)
             try validate(response, data: data)
@@ -193,18 +184,6 @@ final class WallpaperCatalogModel: ObservableObject {
         let value = UUID().uuidString.replacingOccurrences(of: "-", with: "").lowercased()
         UserDefaults.standard.set(value, forKey: key)
         return value
-    }
-
-    private func requestFreeUnlock(for id: Int, fingerprint: String) async {
-        var components = URLComponents(url: baseURL.appendingPathComponent("free_unlock_grant.php"), resolvingAgainstBaseURL: false)!
-        components.queryItems = [
-            URLQueryItem(name: "card_id", value: String(id)),
-            URLQueryItem(name: "device_fp", value: fingerprint)
-        ]
-        guard let url = components.url else { return }
-        guard let (data, response) = try? await session.data(from: url) else { return }
-        guard (response as? HTTPURLResponse).map({ 200..<300 ~= $0.statusCode }) == true else { return }
-        _ = try? JSONDecoder().decode(UnlockGrantResponse.self, from: data)
     }
 
     private func merge(_ newItems: [RemoteWallpaper]) {
