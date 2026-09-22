@@ -170,7 +170,7 @@ final class WallpaperCatalogModel: ObservableObject {
 
         var components = URLComponents(url: baseURL.appendingPathComponent("get_download_url.php"), resolvingAgainstBaseURL: false)!
         components.queryItems = [
-            URLQueryItem(name: "id", value: String(item.id)),
+            URLQueryItem(name: "card_id", value: String(item.id)),
             URLQueryItem(name: "device_fp", value: fingerprint)
         ]
         let (data, response) = try await session.data(from: components.url!)
@@ -185,9 +185,12 @@ final class WallpaperCatalogModel: ObservableObject {
     private func deviceFingerprint() -> String {
         let key = "com.mutually.wallpaper.device"
         if let existing = UserDefaults.standard.string(forKey: key), !existing.isEmpty {
-            return existing
+            let normalized = existing.replacingOccurrences(of: "-", with: "").lowercased()
+            if normalized.count == 32 {
+                return normalized
+            }
         }
-        let value = UUID().uuidString.lowercased()
+        let value = UUID().uuidString.replacingOccurrences(of: "-", with: "").lowercased()
         UserDefaults.standard.set(value, forKey: key)
         return value
     }
@@ -195,7 +198,7 @@ final class WallpaperCatalogModel: ObservableObject {
     private func requestFreeUnlock(for id: Int, fingerprint: String) async {
         var components = URLComponents(url: baseURL.appendingPathComponent("free_unlock_grant.php"), resolvingAgainstBaseURL: false)!
         components.queryItems = [
-            URLQueryItem(name: "id", value: String(id)),
+            URLQueryItem(name: "card_id", value: String(id)),
             URLQueryItem(name: "device_fp", value: fingerprint)
         ]
         guard let url = components.url else { return }
