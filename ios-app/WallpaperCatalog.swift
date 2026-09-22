@@ -40,26 +40,45 @@ private struct WallpaperListResponse: Decodable {
 }
 
 private struct DownloadResponse: Decodable {
+    let success: Bool?
     let ok: Bool?
+    let code: Int?
+    let message: String?
+    let needPay: Bool?
     let url: URL?
     let downloadURL: URL?
+    let downURL: URL?
     let data: DownloadPayload?
     let error: String?
 
     enum CodingKeys: String, CodingKey {
-        case ok, url, data, error
+        case success, ok, code, message, url, data, error
+        case needPay = "need_pay"
         case downloadURL = "download_url"
+        case downURL = "down_url"
     }
 }
 
 private struct DownloadPayload: Decodable {
+    let success: Bool?
+    let message: String?
     let url: URL?
     let downloadURL: URL?
+    let downURL: URL?
 
     enum CodingKeys: String, CodingKey {
-        case url
+        case success, message, url
         case downloadURL = "download_url"
+        case downURL = "down_url"
     }
+}
+
+private struct UnlockGrantResponse: Decodable {
+    let success: Bool?
+    let ok: Bool?
+    let code: Int?
+    let message: String?
+    let error: String?
 }
 
 @MainActor
@@ -107,7 +126,7 @@ final class WallpaperCatalogModel: ObservableObject {
                 URLQueryItem(name: "tag", value: selectedTag)
             ]
             let (data, response) = try await session.data(from: components.url!)
-            try validate(response)
+            try validate(response, data: data)
             let decoded = try JSONDecoder().decode(WallpaperListResponse.self, from: data)
             if reset { wallpapers = decoded.data }
             else { merge(decoded.data) }
@@ -124,9 +143,11 @@ final class WallpaperCatalogModel: ObservableObject {
         defer { downloadingID = nil }
 
         do {
+            let fingerprint = deviceFingerprint()
+            await requestFreeUnlock(for: item.id, fingerprint: fingerprint)
             let url = try await resolveDownloadURL(for: item)
             let (data, response) = try await session.data(from: url)
-            try validate(response)
+            try validate(response, data: data)
             guard data.count > 4, data.starts(with: [0x50, 0x4B, 0x03, 0x04]) else {
                 throw CatalogError.invalidPackage
             }
@@ -145,14 +166,7 @@ final class WallpaperCatalogModel: ObservableObject {
     private func resolveDownloadURL(for item: RemoteWallpaper) async throws -> URL {
         if let direct = item.downloadURL { return direct }
 
-        let fingerprintKey = "com.mutually.wallpaper.device"
-        let fingerprint: String
-        if let existing = UserDefaults.standard.string(forKey: fingerprintKey) {
-            fingerprint = existing
-        } else {
-            fingerprint = UUID().uuidString
-            UserDefaults.standard.set(fingerprint, forKey: fingerprintKey)
-        }
+        let fingerprint = deviceFingerprint()
 
         var components = URLComponents(url: baseURL.appendingPathComponent("get_download_url.php"), resolvingAgainstBaseURL: false)!
         components.queryItems = [
@@ -160,12 +174,34 @@ final class WallpaperCatalogModel: ObservableObject {
             URLQueryItem(name: "device_fp", value: fingerprint)
         ]
         let (data, response) = try await session.data(from: components.url!)
-        try validate(response)
+        try validate(response, data: data)
         let decoded = try JSONDecoder().decode(DownloadResponse.self, from: data)
-        if let url = decoded.url ?? decoded.downloadURL ?? decoded.data?.url ?? decoded.data?.downloadURL {
+        if let url = decoded.url ?? decoded.downloadURL ?? decoded.downURL ?? decoded.data?.url ?? decoded.data?.downloadURL ?? decoded.data?.downURL {
             return url
         }
-        throw CatalogError.server(decoded.error ?? "服务端未返回下载地址")
+        throw CatalogError.server(decoded.error ?? decoded.message ?? decoded.data?.message ?? "服务端未返回下载地址")
+    }
+
+    private func deviceFingerprint() -> String {
+        let key = "com.mutually.wallpaper.device"
+        if let existing = UserDefaults.standard.string(forKey: key), !existing.isEmpty {
+            return existing
+        }
+        let value = UUID().uuidString.lowercased()
+        UserDefaults.standard.set(value, forKey: key)
+        return value
+    }
+
+    private func requestFreeUnlock(for id: Int, fingerprint: String) async {
+        var components = URLComponents(url: baseURL.appendingPathComponent("free_unlock_grant.php"), resolvingAgainstBaseURL: false)!
+        components.queryItems = [
+            URLQueryItem(name: "id", value: String(id)),
+            URLQueryItem(name: "device_fp", value: fingerprint)
+        ]
+        guard let url = components.url else { return }
+        guard let (data, response) = try? await session.data(from: url) else { return }
+        guard (response as? HTTPURLResponse).map({ 200..<300 ~= $0.statusCode }) == true else { return }
+        _ = try? JSONDecoder().decode(UnlockGrantResponse.self, from: data)
     }
 
     private func merge(_ newItems: [RemoteWallpaper]) {
@@ -174,21 +210,36 @@ final class WallpaperCatalogModel: ObservableObject {
         wallpapers = byID.values.sorted { $0.id > $1.id }
     }
 
-    private func validate(_ response: URLResponse) throws {
-        guard let http = response as? HTTPURLResponse, 200..<300 ~= http.statusCode else {
+    private func validate(_ response: URLResponse, data: Data? = nil) throws {
+        guard let http = response as? HTTPURLResponse else {
             throw CatalogError.badResponse
         }
+        guard 200..<300 ~= http.statusCode else {
+            throw CatalogError.http(status: http.statusCode, message: serverMessage(from: data))
+        }
+    }
+
+    private func serverMessage(from data: Data?) -> String? {
+        guard let data,
+              let object = try? JSONSerialization.jsonObject(with: data),
+              let dictionary = object as? [String: Any] else {
+            return nil
+        }
+        return (dictionary["message"] as? String) ?? (dictionary["error"] as? String)
     }
 }
 
 private enum CatalogError: LocalizedError {
     case badResponse
+    case http(status: Int, message: String?)
     case invalidPackage
     case server(String)
 
     var errorDescription: String? {
         switch self {
         case .badResponse: return "服务器响应异常"
+        case .http(let status, let message):
+            return message.map { "下载服务返回 HTTP \(status)：\($0)" } ?? "下载服务暂时不可用（HTTP \(status)），请稍后重试"
         case .invalidPackage: return "服务器返回的不是有效的 .tendies 文件"
         case .server(let message): return message
         }

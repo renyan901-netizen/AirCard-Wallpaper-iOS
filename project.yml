@@ -22,6 +22,8 @@ targets:
     platform: iOS
     sources:
       - path: ios-app
+    resources:
+      - path: ios-app/zh-Hans.lproj
     dependencies:
       - framework: AirliftFFI.xcframework
         embed: false

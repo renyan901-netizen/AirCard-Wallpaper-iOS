@@ -355,35 +355,35 @@ struct ContentView: View {
     var body: some View {
         TabView(selection: $vm.selectedTab) {
             PairingTab()
-                .tabItem { Label("Pairing", systemImage: "antenna.radiowaves.left.and.right") }
+                .tabItem { Label("配对", systemImage: "antenna.radiowaves.left.and.right") }
                 .tag(AppTab.pairing)
 
             WalletCardsTab()
-                .tabItem { Label("Wallet Cards", systemImage: "creditcard.fill") }
+                .tabItem { Label("钱包", systemImage: "creditcard.fill") }
                 .tag(AppTab.walletCards)
 
             PasscodeThemeTab()
-                .tabItem { Label("Passcode", systemImage: "lock.circle.fill") }
+                .tabItem { Label("密码", systemImage: "lock.circle.fill") }
                 .tag(AppTab.passcodeThemes)
 
             TendiesView()
-                .tabItem { Label("Wallpapers", systemImage: "photo.stack.fill") }
+                .tabItem { Label("壁纸", systemImage: "photo.stack.fill") }
                 .tag(AppTab.wallpapers)
 
             WallpaperCatalogView()
                 .tabItem { Label("资源", systemImage: "square.grid.2x2.fill") }
                 .tag(AppTab.wallpaperCatalog)
         }
-        .alert("Notice", isPresented: Binding(
+        .alert("提示", isPresented: Binding(
             get: { vm.errorMessage != nil },
             set: { if !$0 { vm.errorMessage = nil } }
         )) {
-            Button("OK") { vm.errorMessage = nil }
+            Button("确定") { vm.errorMessage = nil }
         } message: {
             Text(vm.errorMessage ?? "")
         }
-        .alert("Success! 🎉", isPresented: $vm.showSuccessAlert) {
-            Button("OK") {}
+        .alert("操作成功！🎉", isPresented: $vm.showSuccessAlert) {
+            Button("确定") {}
         } message: {
             Text(vm.successAlertMessage)
         }

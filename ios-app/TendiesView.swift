@@ -54,7 +54,7 @@ struct TendiesView: View {
                         HStack(spacing: 8) {
                             Spacer()
                             Image(systemName: "doc.badge.plus")
-                            Text(vm.tendieItems.isEmpty ? "Choose .tendies from Files…" : "Import More Wallpapers…")
+                            Text(vm.tendieItems.isEmpty ? "从文件选择 .tendies…" : "导入更多壁纸…")
                             Spacer()
                         }
                         .font(.headline)
@@ -65,7 +65,7 @@ struct TendiesView: View {
                     .tint(.blue)
                 } footer: {
                     if vm.posterBoardContainer.isEmpty {
-                        Text("PosterBoard container will be auto-detected automatically on flash.")
+                        Text("写入时会自动检测 PosterBoard 容器。")
                     } else {
                         Text("Target: PosterBoard container detected ✅")
                     }
@@ -75,9 +75,9 @@ struct TendiesView: View {
                 Section {
                     Toggle(isOn: $vm.resetPBProtections) {
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("Force PosterBoard Cache Refresh")
+                            Text("强制刷新 PosterBoard 缓存")
                                 .font(.subheadline.weight(.medium))
-                            Text("Resets file protections so iOS re-indexes wallpapers immediately")
+                            Text("重置文件保护，让 iOS 立即重新索引壁纸")
                                 .font(.caption2)
                                 .foregroundColor(.secondary)
                         }
@@ -109,7 +109,7 @@ struct TendiesView: View {
                             }
                         }
                     } header: {
-                        Text("Wallpapers Gallery")
+                            Text("壁纸库")
                     }
                 } else {
                     Section {
@@ -117,7 +117,7 @@ struct TendiesView: View {
                             Image(systemName: "photo.stack")
                                 .font(.system(size: 32))
                                 .foregroundColor(.secondary)
-                            Text("No .tendies wallpapers loaded yet")
+                            Text("尚未加载 .tendies 壁纸")
                                 .font(.subheadline)
                                 .foregroundColor(.secondary)
                             Text("Tap 'Choose .tendies from Files' or copy wallpapers into On My iPhone › AirCard-iOS.")
@@ -137,7 +137,7 @@ struct TendiesView: View {
                             HStack(spacing: 10) {
                                 ProgressView()
                                 VStack(alignment: .leading, spacing: 4) {
-                                    Text("Flashing Wallpapers…").font(.subheadline.bold())
+                            Text("正在写入壁纸…").font(.subheadline.bold())
                                     ProgressView(value: vm.tendiesFlashProgress)
                                 }
                             }
@@ -151,7 +151,7 @@ struct TendiesView: View {
                                 HStack(spacing: 8) {
                                     Spacer()
                                     Image(systemName: "sparkles")
-                                    Text("Flash \(selectedCount) Wallpaper\(selectedCount == 1 ? "" : "s")")
+                                    Text("写入 \(selectedCount) 张壁纸")
                                     Spacer()
                                 }
                                 .font(.headline)
@@ -171,7 +171,7 @@ struct TendiesView: View {
                             HStack(spacing: 8) {
                                 Spacer()
                                 Image(systemName: "bolt.fill")
-                                Text("Respring (NeoSpring)")
+                                Text("重载桌面（NeoSpring）")
                                 Spacer()
                             }
                             .font(.headline)
@@ -183,7 +183,7 @@ struct TendiesView: View {
                     }
                     .listRowInsets(EdgeInsets(top: 12, leading: 14, bottom: 12, trailing: 14))
                 } footer: {
-                    Text("Flashing will automatically trigger NeoSpring to respring the device and apply your new wallpapers.")
+                    Text("写入完成后会自动通过 NeoSpring 重载桌面并应用新壁纸。")
                 }
 
                 // Section 5: Flash Log (CompactLogView)
@@ -200,7 +200,7 @@ struct TendiesView: View {
             .safeAreaInset(edge: .bottom) {
                 Color.clear.frame(height: 60)
             }
-            .navigationTitle("Wallpapers")
+            .navigationTitle("壁纸")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -345,14 +345,14 @@ struct TendieDetailSheet: View {
                 }
 
                 Section("Information") {
-                    detailRow(title: "Name", value: item.name)
-                    detailRow(title: "File Name", value: item.fileName)
-                    detailRow(title: "Type", value: item.posterType.rawValue)
-                    detailRow(title: "Descriptors", value: "\(item.descriptorCount)")
-                    detailRow(title: "Target Extension", value: item.posterType.extensionBundleId)
-                    detailRow(title: "Format", value: item.isContainer ? "App Container" : "Descriptor Archive")
+                    detailRow(title: "名称", value: item.name)
+                    detailRow(title: "文件名", value: item.fileName)
+                    detailRow(title: "类型", value: item.posterType.rawValue)
+                    detailRow(title: "描述文件", value: "\(item.descriptorCount)")
+                    detailRow(title: "目标扩展", value: item.posterType.extensionBundleId)
+                    detailRow(title: "格式", value: item.isContainer ? "应用容器" : "描述文件归档")
                     if item.unsafeContainer {
-                        detailRow(title: "Warning", value: "Contains SQLite database")
+                        detailRow(title: "警告", value: "包含 SQLite 数据库")
                     }
                 }
             }
@@ -360,7 +360,7 @@ struct TendieDetailSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
+                    Button("完成") {
                         dismiss()
                     }
                 }
