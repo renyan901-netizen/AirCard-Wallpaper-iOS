@@ -1,4 +1,5 @@
 name: Build AirCard-Wallpaper IPA
+# CI also preserves compiler diagnostics as an artifact when a build fails.
 
 on:
   workflow_dispatch:
