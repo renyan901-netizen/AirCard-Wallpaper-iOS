@@ -1,0 +1,20 @@
+{
+  "name": "aircard-license-netlify",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": "20"
+  },
+  "scripts": {
+    "dev": "netlify dev",
+    "deploy": "netlify deploy --prod"
+  },
+  "dependencies": {
+    "@netlify/functions": "^5.3.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0",
+    "netlify-cli": "^23.5.0",
+    "typescript": "^5.8.3"
+  }
+}

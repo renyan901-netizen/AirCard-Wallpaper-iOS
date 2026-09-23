@@ -13,11 +13,13 @@ final class LicenseManager: ObservableObject {
     @Published var lastError: String?
 
     private let session: URLSession
-    private let apiBaseURL = URL(string: "https://wall-api.18ir.cn/api")!
+    private let apiBaseURL: URL
     private let deviceID: String
 
     private init(session: URLSession = .shared) {
         self.session = session
+        let configuredURL = Bundle.main.object(forInfoDictionaryKey: "LicenseAPIBaseURL") as? String
+        self.apiBaseURL = URL(string: configuredURL ?? "https://wall-api.18ir.cn/api")!
         self.deviceID = Self.loadOrCreateDeviceID()
     }
 

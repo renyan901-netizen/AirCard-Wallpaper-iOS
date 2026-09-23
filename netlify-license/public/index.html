@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AirCard 卡密后台</title>
+  <style>
+    :root { color-scheme: light; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    body { margin: 0; min-height: 100vh; background: #f4f6f8; color: #15202b; }
+    main { max-width: 1080px; margin: 0 auto; padding: 32px 18px 80px; }
+    h1 { margin: 0 0 8px; font-size: 28px; }
+    .subtle { color: #657381; }
+    .panel { margin-top: 22px; padding: 22px; background: #fff; border: 1px solid #e1e7ed; border-radius: 12px; box-shadow: 0 3px 16px #172b4d0d; }
+    form { display: grid; gap: 12px; }
+    .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    label { display: grid; gap: 6px; color: #43515d; font-size: 14px; }
+    input, textarea, button { font: inherit; border: 1px solid #c9d2dc; border-radius: 8px; padding: 10px 12px; box-sizing: border-box; }
+    input, textarea { width: 100%; }
+    button { cursor: pointer; border: 0; color: #fff; background: #1473e6; }
+    button.danger { background: #d83a3a; }
+    .actions { display: flex; gap: 10px; align-items: center; }
+    .hidden { display: none; }
+    .notice { margin-top: 14px; padding: 12px; border-radius: 8px; background: #e9f4ff; color: #15558b; white-space: pre-wrap; }
+    table { width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 14px; }
+    th, td { padding: 10px 8px; border-bottom: 1px solid #e8edf2; text-align: left; vertical-align: top; }
+    code { font-size: 12px; }
+    @media (max-width: 720px) { .grid { grid-template-columns: 1fr; } table { display: block; overflow-x: auto; white-space: nowrap; } }
+  </style>
+</head>
+<body>
+<main>
+  <h1>AirCard 卡密后台</h1>
+  <div class="subtle">生成、查看和撤销软件使用期限卡密</div>
+
+  <section id="login-panel" class="panel">
+    <form id="login-form">
+      <label>管理员密钥<input id="admin-key" type="password" autocomplete="current-password" required></label>
+      <div class="actions"><button type="submit">进入后台</button><span id="login-error" class="subtle"></span></div>
+    </form>
+  </section>
+
+  <section id="admin-panel" class="panel hidden">
+    <form id="generate-form">
+      <div class="grid">
+        <label>使用天数<input id="days" type="number" min="1" max="3650" value="30"></label>
+        <label>生成数量<input id="quantity" type="number" min="1" max="500" value="1"></label>
+        <label>备注<input id="note" type="text" maxlength="200" placeholder="例如：测试用户"></label>
+      </div>
+      <div class="actions"><button type="submit">生成卡密</button><button id="refresh" type="button">刷新列表</button></div>
+    </form>
+    <div id="notice" class="notice hidden"></div>
+    <div id="generated-wrap" class="hidden">
+      <h3>新生成的卡密</h3>
+      <textarea id="generated" rows="4" readonly></textarea>
+    </div>
+    <h2>最近卡密</h2>
+    <div id="table-wrap"></div>
+  </section>
+</main>
+<script>
+  const loginPanel = document.getElementById("login-panel");
+  const adminPanel = document.getElementById("admin-panel");
+  const loginForm = document.getElementById("login-form");
+  const adminKeyInput = document.getElementById("admin-key");
+  const loginError = document.getElementById("login-error");
+  const notice = document.getElementById("notice");
+  const tableWrap = document.getElementById("table-wrap");
+  const generatedWrap = document.getElementById("generated-wrap");
+  const generated = document.getElementById("generated");
+  const auth = () => ({ Authorization: "Bearer " + sessionStorage.getItem("aircard-admin-key") });
+  const showNotice = (text) => { notice.textContent = text; notice.classList.remove("hidden"); };
+
+  loginForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    sessionStorage.setItem("aircard-admin-key", adminKeyInput.value);
+    const ok = await loadRows();
+    if (ok) { loginPanel.classList.add("hidden"); adminPanel.classList.remove("hidden"); }
+    else { sessionStorage.removeItem("aircard-admin-key"); loginError.textContent = "管理员密钥无效或服务未配置"; }
+  });
+
+  document.getElementById("generate-form").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const response = await fetch("/api/license_generate", {
+      method: "POST", headers: { ...auth(), "Content-Type": "application/json" },
+      body: JSON.stringify({ days: Number(document.getElementById("days").value), quantity: Number(document.getElementById("quantity").value), note: document.getElementById("note").value })
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || !data.ok) { showNotice(data.message || "生成失败"); return; }
+    generated.value = data.keys.join("\n");
+    generatedWrap.classList.remove("hidden");
+    showNotice(data.message);
+    await loadRows();
+  });
+
+  document.getElementById("refresh").addEventListener("click", loadRows);
+
+  async function loadRows() {
+    const response = await fetch("/api/license_list", { headers: auth() });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || !data.ok) return false;
+    tableWrap.innerHTML = "<table><thead><tr><th>ID</th><th>后四位</th><th>天数</th><th>状态</th><th>设备</th><th>到期</th><th>操作</th></tr></thead><tbody>" +
+      data.rows.map(row => "<tr><td>" + row.id + "</td><td><code>" + row.key_hint + "</code></td><td>" + row.days + "</td><td>" + row.status + "</td><td><code>" + (row.device_id ? row.device_id.slice(0, 8) + "..." : "-") + "</code></td><td>" + (row.expires_at || "-") + "</td><td>" + (row.status === "revoked" ? "-" : "<button class=\"danger\" data-id=\"" + row.id + "\">撤销</button>") + "</td></tr>").join("") +
+      "</tbody></table>";
+    tableWrap.querySelectorAll("button[data-id]").forEach(button => button.addEventListener("click", () => revoke(Number(button.dataset.id))));
+    return true;
+  }
+
+  async function revoke(id) {
+    if (!confirm("确定撤销这张卡密吗？")) return;
+    const response = await fetch("/api/license_revoke", {
+      method: "POST", headers: { ...auth(), "Content-Type": "application/json" }, body: JSON.stringify({ id })
+    });
+    const data = await response.json().catch(() => ({}));
+    showNotice(data.message || "操作完成");
+    await loadRows();
+  }
+</script>
+</body>
+</html>
