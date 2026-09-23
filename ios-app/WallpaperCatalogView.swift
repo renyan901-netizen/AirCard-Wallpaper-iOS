@@ -2,6 +2,8 @@ import SwiftUI
 
 struct WallpaperCatalogView: View {
     @StateObject private var model = WallpaperCatalogModel()
+    @ObservedObject private var license = LicenseManager.shared
+    @State private var showLicenseSheet = false
 
     var body: some View {
         NavigationStack {
@@ -38,6 +40,12 @@ struct WallpaperCatalogView: View {
                     }
                     .disabled(model.isLoading)
                 }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button { showLicenseSheet = true } label: {
+                        Image(systemName: "key.fill")
+                    }
+                    .accessibilityLabel("卡密兑换")
+                }
                 ToolbarItem(placement: .topBarLeading) {
                     Menu {
                         Button("全部") { model.selectedTag = nil; Task { await model.load(reset: true) } }
@@ -50,10 +58,60 @@ struct WallpaperCatalogView: View {
                 }
             }
             .task { await model.load(reset: true) }
+            .task { await license.refresh() }
+            .sheet(isPresented: $showLicenseSheet) {
+                LicenseRedeemView(license: license)
+            }
             .alert("提示", isPresented: Binding(get: { model.errorMessage != nil }, set: { if !$0 { model.errorMessage = nil } })) {
                 Button("确定") { model.errorMessage = nil }
             } message: {
                 Text(model.errorMessage ?? "")
+            }
+        }
+    }
+}
+
+private struct LicenseRedeemView: View {
+    @ObservedObject var license: LicenseManager
+    @Environment(\.dismiss) private var dismiss
+    @State private var licenseKey = ""
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("软件授权") {
+                    Label(license.statusText, systemImage: license.isActive ? "checkmark.seal.fill" : "lock.fill")
+                        .foregroundStyle(license.isActive ? .green : .secondary)
+
+                    TextField("输入卡密", text: $licenseKey)
+                        .textInputAutocapitalization(.characters)
+                        .autocorrectionDisabled()
+
+                    Button {
+                        Task { await license.redeem(licenseKey) }
+                    } label: {
+                        HStack {
+                            Spacer()
+                            if license.isBusy { ProgressView() }
+                            else { Text("兑换卡密") }
+                            Spacer()
+                        }
+                    }
+                    .disabled(license.isBusy || licenseKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                }
+
+                if let error = license.lastError {
+                    Section {
+                        Text(error).foregroundStyle(.red)
+                    }
+                }
+            }
+            .navigationTitle("卡密兑换")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("关闭") { dismiss() }
+                }
             }
         }
     }
