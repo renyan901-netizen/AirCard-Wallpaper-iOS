@@ -9,7 +9,7 @@ settings:
   base:
     SWIFT_VERSION: "5.0"
     MARKETING_VERSION: "1.3"
-    CURRENT_PROJECT_VERSION: "1.3"
+    CURRENT_PROJECT_VERSION: "1.4"
     TARGETED_DEVICE_FAMILY: "1"
     # AirliftFFI is arm64-only (aws-lc-rs / idevice); drop x86_64 simulator slice.
     EXCLUDED_ARCHS[sdk=iphonesimulator*]: x86_64
@@ -27,12 +27,32 @@ targets:
     dependencies:
       - framework: AirliftFFI.xcframework
         embed: false
+      - sdk: NetworkExtension.framework
+      - target: AirCard-LocalDevVPN
     settings:
       base:
         PRODUCT_NAME: "AirCard-iOS"
         PRODUCT_BUNDLE_IDENTIFIER: com.mutually.wallpaper
         INFOPLIST_FILE: ios-app/Info.plist
+        CODE_SIGN_ENTITLEMENTS: ios-app/AirCard-iOS.entitlements
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         # idevice's static lib pulls in C++ symbols (aws-lc); link libc++.
         OTHER_LDFLAGS: "-lc++ -framework Security"
+        GENERATE_INFOPLIST_FILE: NO
+
+  AirCard-LocalDevVPN:
+    type: app-extension
+    platform: iOS
+    deploymentTarget: "18.0"
+    sources:
+      - path: vpn-extension
+    dependencies:
+      - sdk: NetworkExtension.framework
+    settings:
+      base:
+        PRODUCT_NAME: "AirCard-LocalDevVPN"
+        PRODUCT_BUNDLE_IDENTIFIER: com.mutually.wallpaper.LocalDevVPN
+        INFOPLIST_FILE: vpn-extension/Info.plist
+        CODE_SIGN_ENTITLEMENTS: vpn-extension/AirCardLocalDevVPN.entitlements
+        SKIP_INSTALL: YES
         GENERATE_INFOPLIST_FILE: NO

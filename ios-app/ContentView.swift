@@ -627,10 +627,12 @@ struct PairingTab: View {
             .onAppear {
                 vm.refreshNetworkStatus()
                 vm.refreshPairingFile()
+                Task { await LocalDevVPNManager.shared.refresh() }
             }
             .refreshable {
                 vm.refreshNetworkStatus()
                 vm.refreshPairingFile()
+                await LocalDevVPNManager.shared.refresh()
             }
         }
     }
@@ -640,45 +642,62 @@ struct PairingTab: View {
 
 struct VPNStatusRow: View {
     @ObservedObject var vm: AppViewModel
+    @ObservedObject private var localVPN = LocalDevVPNManager.shared
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 12) {
-                Image(systemName: vm.vpnUp
+                Image(systemName: localVPN.isActive
                       ? "checkmark.shield.fill"
                       : "exclamationmark.triangle.fill")
                     .font(.title3)
-                    .foregroundStyle(vm.vpnUp ? .green : .orange)
+                    .foregroundStyle(localVPN.isActive ? .green : .orange)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(vm.vpnUp ? "Loopback VPN Active" : "Loopback VPN Not Detected")
+                    Text(localVPN.isActive ? "本地回环已准备" : "本地回环未启动")
                         .font(.subheadline.bold())
-                    Text(vm.vpnUp
-                         ? "RSD tunnel ready — exploit will connect."
-                         : "Connect LocalDevVPN before running flashes.")
+                    Text(localVPN.isActive
+                         ? "AirCard 已接管 LocalDevVPN，导入前准备完成。"
+                         : "点击下方按钮启动内置本地回环。")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
+                Spacer()
+                Text(localVPN.status.title)
+                    .font(.caption.bold())
+                    .foregroundStyle(localVPN.isActive ? .green : .secondary)
             }
 
-            if !vm.vpnUp {
+            if !localVPN.isActive {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("Setup LocalDevVPN:")
+                    Text("准备本地回环")
                         .font(.caption.bold())
-                    ForEach([
-                        "1. Open LocalDevVPN app and tap Connect.",
-                        "2. Return to AirCard-iOS — status indicator turns green."
-                    ], id: \.self) { step in
-                        Text(step)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                    Button {
+                        Task { await localVPN.start(peerIP: vm.deviceIP) }
+                    } label: {
+                        Label("启动内置 LocalDevVPN", systemImage: "shield.lefthalf.filled")
+                            .frame(maxWidth: .infinity)
                     }
-                    Link("Launch LocalDevVPN",
-                         destination: URL(string: "localdevvpn://")!)
-                        .font(.caption.bold())
+                    .buttonStyle(.borderedProminent)
+                    .disabled(localVPN.status == .connecting)
                 }
                 .padding(10)
                 .background(Color.orange.opacity(0.08))
                 .clipShape(RoundedRectangle(cornerRadius: 10))
+            } else {
+                Button {
+                    localVPN.stop()
+                } label: {
+                    Label("停止本地回环", systemImage: "stop.circle")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.bordered)
+            }
+
+            if let lastError = localVPN.lastError {
+                Text(lastError)
+                    .font(.caption)
+                    .foregroundStyle(.red)
+                    .textSelection(.enabled)
             }
 
             HStack(spacing: 8) {

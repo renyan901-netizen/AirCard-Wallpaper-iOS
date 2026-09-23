@@ -37,6 +37,23 @@ Calling `get_download_url.php` directly, or sending the raw numeric ID to `free_
 
 On iOS 27, the original app can download the `.tendies` package but its legacy PosterBoard container installation reports that the container is unavailable. The merged app therefore keeps the downloaded package in the app container and uses AirCard's pairing/local-loopback import path. The recovery scan searches Documents, Application Support, and Caches for `.tendies` files and imports them into the existing AirCard storage.
 
+## Built-In LocalDevVPN
+
+The LocalDevVPN loopback tunnel is now embedded in the same IPA. The integration includes a `NetworkExtension` packet-tunnel target and the main app's in-app manager:
+
+- Main App Bundle ID: `com.mutually.wallpaper`
+- Packet Tunnel Bundle ID: `com.mutually.wallpaper.LocalDevVPN`
+- Interface address: `10.7.1.1/32`
+- Peer/device address: `10.7.0.1/32` by default, configurable from the Pairing page
+- Main App entitlement: `allow-vpn` and `packet-tunnel-provider`
+- Extension entitlement: `packet-tunnel-provider`
+
+The Pairing page creates the VPN profile on first use, saves it to iOS VPN preferences, starts the packet tunnel, and then AirCard can continue directly to pairing and wallpaper flashing. The separate LocalDevVPN app is no longer required.
+
+The packet provider uses the upstream LocalDevVPN reflection behavior: it installs only the peer route, excludes the default route, and reflects IPv4 source/destination addresses inside the packet loop. The upstream project is credited in `THIRD-PARTY-NOTICES.md`.
+
+The signing profile must allow Network Extension packet-tunnel capabilities for both Bundle IDs. A self-signed IPA without those entitlements may install but cannot create or start the VPN configuration.
+
 ## Build
 
 Build on macOS with Xcode 16 or newer:

@@ -24,7 +24,6 @@
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
-		<string>localdevvpn</string>
 		<string>prefs</string>
 		<string>app-prefs</string>
 		<string>App-prefs</string>

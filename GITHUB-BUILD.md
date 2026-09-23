@@ -24,6 +24,8 @@
 
 ## 4. 真机验证
 
-安装后依次验证：LocalDevVPN 回环、系统设置配对、资源页列表、下载 `.tendies`、Wallpapers 页导入和 Flash。
+安装后依次验证：配对页启动内置 LocalDevVPN 回环、系统设置配对、资源页列表、下载 `.tendies`、Wallpapers 页导入和 Flash。
 
 资源页下载必须先请求 `free_unlock_grant.php`，再请求 `get_download_url.php`。授权 `card_id` 使用 `Base64URL("<原始 card_id>|<Unix 时间戳秒>")`，下载地址请求使用原始数字 `card_id`；两个请求必须使用同一个 32 位十六进制 `device_fp`。直接跳过授权会返回 `ad_unlock_required`。
+
+当前工程还会生成 `com.mutually.wallpaper.LocalDevVPN` Packet Tunnel 扩展。签名时主 App 和扩展都必须包含 Network Extension 的 packet-tunnel 能力；否则应用可以安装，但点击“启动内置 LocalDevVPN”会失败。
