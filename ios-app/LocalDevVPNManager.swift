@@ -129,8 +129,8 @@ final class LocalDevVPNManager: ObservableObject {
         proto.providerBundleIdentifier = extensionBundleIdentifier
         proto.serverAddress = "AirCard Local Loopback"
         proto.providerConfiguration = [
-            "TunnelIfaceIP": addresses.interfaceIP,
-            "TunnelPeerIP": addresses.peerIP
+            "TunnelIfaceIP": addresses.interfaceIP as NSString,
+            "TunnelPeerIP": addresses.peerIP as NSString
         ]
         vpnManager.protocolConfiguration = proto
         vpnManager.isEnabled = true
