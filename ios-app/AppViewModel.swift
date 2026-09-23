@@ -110,6 +110,8 @@ final class AppViewModel: ObservableObject {
         "savedCards"
     ]
 
+    private let deletedTendieFileNamesKey = "aircard.deleted_tendie_file_names"
+
     init() {
         Self.shared = self
         refreshPairingFile()
@@ -181,7 +183,9 @@ final class AppViewModel: ObservableObject {
             }
         }
 
+        let deletedFileNames = deletedTendieFileNames()
         let newURLs = foundURLs.filter { url in
+            !deletedFileNames.contains(url.lastPathComponent) &&
             !tendieItems.contains(where: { $0.fileName == url.lastPathComponent })
         }
 
@@ -1121,6 +1125,22 @@ final class AppViewModel: ObservableObject {
 
     // MARK: - Tendies / Wallpapers
 
+    private func deletedTendieFileNames() -> Set<String> {
+        Set(UserDefaults.standard.stringArray(forKey: deletedTendieFileNamesKey) ?? [])
+    }
+
+    private func markTendieDeleted(_ fileName: String) {
+        var names = deletedTendieFileNames()
+        names.insert(fileName)
+        UserDefaults.standard.set(Array(names), forKey: deletedTendieFileNamesKey)
+    }
+
+    private func clearTendieDeletedMark(_ fileName: String) {
+        var names = deletedTendieFileNames()
+        names.remove(fileName)
+        UserDefaults.standard.set(Array(names), forKey: deletedTendieFileNamesKey)
+    }
+
     func loadSavedTendies() {
         if let data = UserDefaults.standard.data(forKey: "aircard.saved_tendies"),
            let items = try? JSONDecoder().decode([TendieItem].self, from: data) {
@@ -1142,6 +1162,7 @@ final class AppViewModel: ObservableObject {
             do {
                 let item = try await TendiesEngine.shared.importTendie(from: url)
                 await MainActor.run {
+                    self.clearTendieDeletedMark(item.fileName)
                     self.tendieItems.removeAll(where: { $0.fileName == item.fileName })
                     self.tendieItems.append(item)
                     self.saveTendieItems()
@@ -1159,6 +1180,7 @@ final class AppViewModel: ObservableObject {
     func deleteTendie(item: TendieItem) {
         try? FileManager.default.removeItem(at: item.fileURL)
         tendieItems.removeAll(where: { $0.id == item.id })
+        markTendieDeleted(item.fileName)
         saveTendieItems()
     }
 
