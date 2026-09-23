@@ -146,17 +146,31 @@ final class AppViewModel: ObservableObject {
     }
 
     func scanDocumentsForTendies() {
-        let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        let fileManager = FileManager.default
+        let docs = fileManager.urls(for: .documentDirectory, in: .userDomainMask)[0]
         let tendiesDir = TendiesEngine.tendiesStorageDirectory
-        
+        let searchRoots = [
+            docs,
+            fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0],
+            fileManager.urls(for: .cachesDirectory, in: .userDomainMask)[0]
+        ]
+
         var foundURLs: [URL] = []
-        if let rootItems = try? FileManager.default.contentsOfDirectory(at: docs, includingPropertiesForKeys: nil) {
-            for u in rootItems where u.pathExtension.lowercased() == "tendies" {
-                let target = tendiesDir.appendingPathComponent(u.lastPathComponent)
-                if u.path != target.path && !FileManager.default.fileExists(atPath: target.path) {
-                    try? FileManager.default.copyItem(at: u, to: target)
+        for root in searchRoots {
+            guard let enumerator = fileManager.enumerator(
+                at: root,
+                includingPropertiesForKeys: [.isRegularFileKey],
+                options: [.skipsHiddenFiles]
+            ) else { continue }
+
+            for case let sourceURL as URL in enumerator where sourceURL.pathExtension.lowercased() == "tendies" {
+                let target = tendiesDir.appendingPathComponent(sourceURL.lastPathComponent)
+                if sourceURL.path != target.path && !fileManager.fileExists(atPath: target.path) {
+                    try? fileManager.copyItem(at: sourceURL, to: target)
                 }
-                foundURLs.append(target)
+                if fileManager.fileExists(atPath: target.path) && !foundURLs.contains(target) {
+                    foundURLs.append(target)
+                }
             }
         }
         if let storedItems = try? FileManager.default.contentsOfDirectory(at: tendiesDir, includingPropertiesForKeys: nil) {
