@@ -167,7 +167,10 @@ final class WallpaperCatalogModel: ObservableObject {
         if let direct = item.downloadURL { return direct }
 
         let fingerprint = deviceFingerprint()
-        try await grantDownload(cardID: item.id, fingerprint: fingerprint)
+        // The original app grants a server-side download entitlement before
+        // resolving the URL. Keep resolving even if the grant is rejected:
+        // an already-entitled device can still receive its download URL.
+        _ = try? await grantDownload(cardID: item.id, fingerprint: fingerprint)
 
         var components = URLComponents(url: baseURL.appendingPathComponent("get_download_url.php"), resolvingAgainstBaseURL: false)!
         components.queryItems = [
