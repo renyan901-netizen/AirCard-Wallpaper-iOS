@@ -168,16 +168,15 @@ final class WallpaperCatalogModel: ObservableObject {
     private func resolveDownloadURL(for item: RemoteWallpaper) async throws -> URL {
         if let direct = item.downloadURL { return direct }
 
-        // The no-ads build already skips the ad-grant flow. Calling the grant
-        // endpoint here generates an encoded card_id that this API rejects.
-        grantResult = "跳过（无广告模式）"
-
         var lastError = "服务端未返回下载地址"
         for candidate in deviceFingerprintCandidates() {
             fingerprintSource = candidate.source
             fingerprintHint = candidate.hint
 
             do {
+                try await grantDownloadAuthorization(for: item.id, deviceFingerprint: candidate.value)
+                grantResult = "成功（\(candidate.source)）"
+
                 var components = URLComponents(url: baseURL.appendingPathComponent("get_download_url.php"), resolvingAgainstBaseURL: false)!
                 components.queryItems = [
                     URLQueryItem(name: "card_id", value: String(item.id)),
@@ -199,6 +198,29 @@ final class WallpaperCatalogModel: ObservableObject {
             throw CatalogError.server("服务器未认可当前设备指纹；下载地址接口要求先完成有效授权")
         }
         throw CatalogError.server(lastError)
+    }
+
+    private func grantDownloadAuthorization(for cardID: Int, deviceFingerprint: String) async throws {
+        let timestamp = Int(Date().timeIntervalSince1970)
+        let rawCardID = "\(cardID)|\(timestamp)"
+        let encodedCardID = Data(rawCardID.utf8)
+            .base64EncodedString()
+            .replacingOccurrences(of: "+", with: "-")
+            .replacingOccurrences(of: "/", with: "_")
+
+        var components = URLComponents(url: baseURL.appendingPathComponent("free_unlock_grant.php"), resolvingAgainstBaseURL: false)!
+        components.queryItems = [
+            URLQueryItem(name: "card_id", value: encodedCardID),
+            URLQueryItem(name: "device_fp", value: deviceFingerprint)
+        ]
+        let (data, response) = try await session.data(from: components.url!)
+        try validate(response, data: data)
+
+        let object = try JSONSerialization.jsonObject(with: data) as? [String: Any]
+        guard object?["ok"] as? Bool == true else {
+            let message = object?["error"] as? String ?? "授权请求失败"
+            throw CatalogError.server(message)
+        }
     }
 
     private func deviceFingerprintCandidates() -> [FingerprintCandidate] {
