@@ -19,3 +19,6 @@ AirliftFFI.xcframework/
 # Package outputs
 *.ipa
 DerivedData/
+
+# Local Netlify folder
+.netlify
