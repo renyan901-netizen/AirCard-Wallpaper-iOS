@@ -1,5 +1,6 @@
 import Foundation
 import Combine
+import CryptoKit
 import Security
 
 struct RemoteWallpaper: Identifiable, Codable, Equatable {
@@ -72,6 +73,13 @@ private struct DownloadPayload: Decodable {
         case downloadURL = "download_url"
         case downURL = "down_url"
     }
+}
+
+private struct GrantResponse: Decodable {
+    let ok: Bool?
+    let success: Bool?
+    let error: String?
+    let message: String?
 }
 
 @MainActor
@@ -159,6 +167,7 @@ final class WallpaperCatalogModel: ObservableObject {
         if let direct = item.downloadURL { return direct }
 
         let fingerprint = deviceFingerprint()
+        try await grantDownload(cardID: item.id, fingerprint: fingerprint)
 
         var components = URLComponents(url: baseURL.appendingPathComponent("get_download_url.php"), resolvingAgainstBaseURL: false)!
         components.queryItems = [
@@ -172,6 +181,28 @@ final class WallpaperCatalogModel: ObservableObject {
             return url
         }
         throw CatalogError.server(decoded.error ?? decoded.message ?? decoded.data?.message ?? "服务端未返回下载地址")
+    }
+
+    private func grantDownload(cardID: Int, fingerprint: String) async throws {
+        let timestamp = Int(Date().timeIntervalSince1970)
+        let input = Data("\(cardID)|\(timestamp)".utf8)
+        let digest = Data(SHA256.hash(data: input))
+        let token = digest.base64EncodedString()
+            .replacingOccurrences(of: "+", with: "-")
+            .replacingOccurrences(of: "/", with: "_")
+            .replacingOccurrences(of: "=", with: "")
+
+        var components = URLComponents(url: baseURL.appendingPathComponent("free_unlock_grant.php"), resolvingAgainstBaseURL: false)!
+        components.queryItems = [
+            URLQueryItem(name: "card_id", value: token),
+            URLQueryItem(name: "device_fp", value: fingerprint)
+        ]
+        let (data, response) = try await session.data(from: components.url!)
+        try validate(response, data: data)
+        let decoded = try JSONDecoder().decode(GrantResponse.self, from: data)
+        guard decoded.ok ?? decoded.success ?? false else {
+            throw CatalogError.server(decoded.error ?? decoded.message ?? "下载授权失败")
+        }
     }
 
     private func deviceFingerprint() -> String {
