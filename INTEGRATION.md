@@ -9,6 +9,34 @@ This working tree uses AirCard-iOS as the iOS 27 PosterBoard import base and add
 - A new `资源` tab in the existing SwiftUI tab bar.
 - Xcode project references for both new Swift files.
 
+## Verified Download Flow
+
+Verified on 2026-09-23 against the live wallpaper service. The resource download must keep the original app's two-step authorization flow:
+
+1. Build a 32-character lowercase hexadecimal device fingerprint. Prefer `UIDevice.current.identifierForVendor`; retain the original app's Keychain value as a fallback. The original Keychain identifiers are service `com.mutually.wallpaper.device` and account `device_fp`.
+2. Encode the authorization card ID as `Base64URL(\"<card_id>|<Unix timestamp seconds>\")`. Use standard Base64, replace `+` with `-` and `/` with `_`, and keep any trailing `=` padding.
+3. Request `GET https://wall-api.18ir.cn/api/free_unlock_grant.php` with the encoded card ID and the same `device_fp`:
+
+   ```text
+   card_id=<Base64URL(card_id|timestamp)>&device_fp=<32-hex-fingerprint>
+   ```
+
+   Continue only when the JSON response contains `ok: true`.
+4. Request `GET https://wall-api.18ir.cn/api/get_download_url.php` with the raw numeric card ID and the same device fingerprint:
+
+   ```text
+   card_id=<numeric-card-id>&device_fp=<32-hex-fingerprint>
+   ```
+
+   The download URL is returned as `down_url` (or an equivalent nested URL field).
+5. Download the `.tendies` package, save it under Documents, and pass it to `TendiesEngine` for import.
+
+Calling `get_download_url.php` directly, or sending the raw numeric ID to `free_unlock_grant.php`, returns `ad_unlock_required` or `invalid card_id`. The grant step is required even in the no-ads build; it is a server-side authorization step, not an ad UI step.
+
+## iOS 27 Import Path
+
+On iOS 27, the original app can download the `.tendies` package but its legacy PosterBoard container installation reports that the container is unavailable. The merged app therefore keeps the downloaded package in the app container and uses AirCard's pairing/local-loopback import path. The recovery scan searches Documents, Application Support, and Caches for `.tendies` files and imports them into the existing AirCard storage.
+
 ## Build
 
 Build on macOS with Xcode 16 or newer:
@@ -19,6 +47,6 @@ Build on macOS with Xcode 16 or newer:
 
 The script produces `build/AirCard-iOS.ipa` without an embedded signing identity. Sign it with the target sideloading tool before installing.
 
-## Remaining device verification
+## Verification Status
 
-The wallpaper list endpoint is verified live. The download endpoint requires the app's device fingerprint and server-side download authorization. The integration preserves the original app's endpoint and fingerprint flow, but the returned `.tendies` download must be verified on a real device because this Windows environment cannot build or run the iOS target.
+The list endpoint, two-step authorization flow, `.tendies` download, and combined iOS 27 workflow were verified on a real device. The unsigned build was produced by GitHub Actions and still requires the user's normal signing step before installation.
