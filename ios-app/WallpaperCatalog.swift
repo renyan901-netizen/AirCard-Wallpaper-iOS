@@ -95,6 +95,8 @@ final class WallpaperCatalogModel: ObservableObject {
     private let baseURL = URL(string: "https://wall-api.18ir.cn/api")!
     private var page = 1
     private var fingerprintSource = "未知"
+    private var fingerprintHint = ""
+    private var grantResult = "未执行"
 
     init(session: URLSession = .shared) {
         self.session = session
@@ -159,7 +161,7 @@ final class WallpaperCatalogModel: ObservableObject {
             await AppViewModel.shared?.importTendieFiles(urls: [destination])
             errorMessage = nil
         } catch {
-            errorMessage = "壁纸下载失败：\(error.localizedDescription)（设备标识：\(fingerprintSource)）"
+            errorMessage = "壁纸下载失败：\(error.localizedDescription)（设备标识：\(fingerprintSource) \(fingerprintHint)；授权请求：\(grantResult)）"
         }
     }
 
@@ -170,7 +172,12 @@ final class WallpaperCatalogModel: ObservableObject {
         // The original app grants a server-side download entitlement before
         // resolving the URL. Keep resolving even if the grant is rejected:
         // an already-entitled device can still receive its download URL.
-        _ = try? await grantDownload(cardID: item.id, fingerprint: fingerprint)
+        do {
+            try await grantDownload(cardID: item.id, fingerprint: fingerprint)
+            grantResult = "成功"
+        } catch {
+            grantResult = error.localizedDescription
+        }
 
         var components = URLComponents(url: baseURL.appendingPathComponent("get_download_url.php"), resolvingAgainstBaseURL: false)!
         components.queryItems = [
@@ -183,7 +190,8 @@ final class WallpaperCatalogModel: ObservableObject {
         if let url = decoded.url ?? decoded.downloadURL ?? decoded.downURL ?? decoded.data?.url ?? decoded.data?.downloadURL ?? decoded.data?.downURL {
             return url
         }
-        throw CatalogError.server(decoded.error ?? decoded.message ?? decoded.data?.message ?? "服务端未返回下载地址")
+        let serverError = decoded.error ?? decoded.message ?? decoded.data?.message ?? "服务端未返回下载地址"
+        throw CatalogError.server("\(serverError)（授权请求：\(grantResult)）")
     }
 
     private func grantDownload(cardID: Int, fingerprint: String) async throws {
@@ -215,6 +223,7 @@ final class WallpaperCatalogModel: ObservableObject {
             if SecItemCopyMatching(query as CFDictionary, &result) == errSecSuccess,
                let normalized = fingerprint(from: result) {
                 fingerprintSource = "Keychain"
+                fingerprintHint = String(normalized.prefix(8))
                 UserDefaults.standard.set(normalized, forKey: key)
                 return normalized
             }
@@ -223,12 +232,14 @@ final class WallpaperCatalogModel: ObservableObject {
         if let existing = UserDefaults.standard.string(forKey: key),
            let normalized = normalizedFingerprint(existing) {
             fingerprintSource = "UserDefaults"
+            fingerprintHint = String(normalized.prefix(8))
             saveFingerprintToKeychain(normalized, service: key)
             return normalized
         }
 
         let value = UUID().uuidString.replacingOccurrences(of: "-", with: "").lowercased()
         fingerprintSource = "新生成"
+        fingerprintHint = String(value.prefix(8))
         UserDefaults.standard.set(value, forKey: key)
         saveFingerprintToKeychain(value, service: key)
         return value
