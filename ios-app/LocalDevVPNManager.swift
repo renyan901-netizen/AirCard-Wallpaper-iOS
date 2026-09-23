@@ -87,8 +87,8 @@ final class LocalDevVPNManager: ObservableObject {
             try await vpnManager.saveToPreferences()
             try await vpnManager.loadFromPreferences()
             try vpnManager.connection.startVPNTunnel(options: [
-                "TunnelIfaceIP": addresses.interfaceIP,
-                "TunnelPeerIP": addresses.peerIP
+                "TunnelIfaceIP": addresses.interfaceIP as NSString,
+                "TunnelPeerIP": addresses.peerIP as NSString
             ])
             isConfigured = true
             status = .connecting
