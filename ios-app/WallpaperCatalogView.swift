@@ -2,6 +2,19 @@ import SwiftUI
 
 struct WallpaperCatalogView: View {
     @StateObject private var model = WallpaperCatalogModel()
+    @State private var paginationTriggerID: Int?
+
+    private func reloadCatalog() {
+        paginationTriggerID = nil
+        Task { await model.load(reset: true) }
+    }
+
+    private func loadNextPageIfNeeded(for item: RemoteWallpaper) {
+        guard item.id == model.filteredWallpapers.last?.id,
+              paginationTriggerID != item.id else { return }
+        paginationTriggerID = item.id
+        Task { await model.load() }
+    }
 
     var body: some View {
         NavigationStack {
@@ -18,31 +31,32 @@ struct WallpaperCatalogView: View {
                                     Task { await model.download(item) }
                                 }
                                 .onAppear {
-                                    if item.id == model.filteredWallpapers.last?.id {
-                                        Task { await model.load() }
-                                    }
+                                    loadNextPageIfNeeded(for: item)
                                 }
                             }
                         }
                         .padding()
                     }
-                    .refreshable { await model.load(reset: true) }
+                    .refreshable {
+                        paginationTriggerID = nil
+                        await model.load(reset: true)
+                    }
                 }
             }
             .navigationTitle("壁纸资源")
             .searchable(text: $model.searchText, prompt: "搜索壁纸")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button { Task { await model.load(reset: true) } } label: {
+                    Button { reloadCatalog() } label: {
                         Image(systemName: "arrow.clockwise")
                     }
                     .disabled(model.isLoading)
                 }
                 ToolbarItem(placement: .topBarLeading) {
                     Menu {
-                        Button("全部") { model.selectedTag = nil; Task { await model.load(reset: true) } }
+                        Button("全部") { model.selectedTag = nil; reloadCatalog() }
                         ForEach(model.tags, id: \.self) { tag in
-                            Button(tag) { model.selectedTag = tag; Task { await model.load(reset: true) } }
+                            Button(tag) { model.selectedTag = tag; reloadCatalog() }
                         }
                     } label: {
                         Image(systemName: "line.3.horizontal.decrease.circle")
