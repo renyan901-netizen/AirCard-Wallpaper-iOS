@@ -137,6 +137,10 @@ final class WallpaperCatalogModel: ObservableObject {
             else { merge(decoded.data) }
             page += 1
             errorMessage = nil
+        } catch is CancellationError {
+            errorMessage = nil
+        } catch let error as URLError where error.code == .cancelled {
+            errorMessage = nil
         } catch {
             errorMessage = "壁纸列表加载失败：\(error.localizedDescription)"
         }

@@ -1,9 +1,11 @@
 import SwiftUI
 
 struct WallpaperCatalogView: View {
+    @EnvironmentObject private var appViewModel: AppViewModel
     @StateObject private var model = WallpaperCatalogModel()
     @State private var paginationTriggerID: Int?
     @State private var isPaginationSentinelVisible = false
+    @State private var scrollPositionID: Int?
 
     private func reloadCatalog() {
         paginationTriggerID = nil
@@ -36,6 +38,7 @@ struct WallpaperCatalogView: View {
                             }
                         }
                         .padding()
+                        .scrollTargetLayout()
 
                         Color.clear
                             .frame(height: 1)
@@ -47,6 +50,7 @@ struct WallpaperCatalogView: View {
                                 isPaginationSentinelVisible = false
                             }
                     }
+                    .scrollPosition(id: $scrollPositionID, anchor: .center)
                     .refreshable {
                         paginationTriggerID = nil
                         await model.load(reset: true)
@@ -55,6 +59,14 @@ struct WallpaperCatalogView: View {
             }
             .onChange(of: model.isLoading) { _, isLoading in
                 if !isLoading {
+                    loadNextPageIfNeeded()
+                }
+            }
+            .onChange(of: appViewModel.selectedTab) { _, selectedTab in
+                guard selectedTab == .wallpaperCatalog else { return }
+                if model.wallpapers.isEmpty {
+                    Task { await model.load(reset: true) }
+                } else {
                     loadNextPageIfNeeded()
                 }
             }
@@ -78,7 +90,11 @@ struct WallpaperCatalogView: View {
                     }
                 }
             }
-            .task { await model.load(reset: true) }
+            .task {
+                if model.wallpapers.isEmpty {
+                    await model.load(reset: true)
+                }
+            }
             .alert("提示", isPresented: Binding(get: { model.errorMessage != nil }, set: { if !$0 { model.errorMessage = nil } })) {
                 Button("确定") { model.errorMessage = nil }
             } message: {
