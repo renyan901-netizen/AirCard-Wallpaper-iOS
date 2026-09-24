@@ -1,5 +1,11 @@
 # 发布记录
 
+## V1.1
+
+- 发布类型：为爱发电免费版更新
+- 更新内容：配对界面增加 VPN 权限证书签名提示；壁纸下载完成后提示“壁纸已加载到导入栏，请手动导入”。
+- 版本号：`1.1 (build 2)`
+
 ## V1.0（正式版）
 
 - 发布类型：为爱发电免费版
@@ -10,5 +16,5 @@
 - 已验证文件：`AirCard-Wallpaper-iOS-为爱发电免费版-未签名.ipa`
 - 已验证文件 SHA-256：`459DCB3DE905490BBDFEC39DEF58806A10FD6845DD66C2FB0850037A2912D148`
 
-后续正式构建使用 `project.yml` 中的 `MARKETING_VERSION: "1.0"` 和
-`CURRENT_PROJECT_VERSION: "1"`。
+V1.0 构建使用 `MARKETING_VERSION: "1.0"` 和
+`CURRENT_PROJECT_VERSION: "1"`；当前正式构建已更新为 V1.1。

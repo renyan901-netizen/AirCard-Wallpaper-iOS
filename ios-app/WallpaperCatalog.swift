@@ -87,6 +87,7 @@ final class WallpaperCatalogModel: ObservableObject {
     @Published private(set) var wallpapers: [RemoteWallpaper] = []
     @Published private(set) var isLoading = false
     @Published var errorMessage: String?
+    @Published var noticeMessage: String?
     @Published var searchText = ""
     @Published var selectedTag: String?
     @Published var downloadingID: Int?
@@ -159,6 +160,7 @@ final class WallpaperCatalogModel: ObservableObject {
             let destination = docs.appendingPathComponent("\(safeName)-\(item.id).tendies")
             try data.write(to: destination, options: .atomic)
             await AppViewModel.shared?.importTendieFiles(urls: [destination])
+            noticeMessage = "壁纸已加载到导入栏，请手动导入"
             errorMessage = nil
         } catch {
             errorMessage = "壁纸下载失败：\(error.localizedDescription)（设备标识：\(fingerprintSource) \(fingerprintHint)；授权请求：\(grantResult)）"

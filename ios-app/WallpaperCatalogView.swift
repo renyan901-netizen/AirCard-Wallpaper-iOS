@@ -55,6 +55,11 @@ struct WallpaperCatalogView: View {
             } message: {
                 Text(model.errorMessage ?? "")
             }
+            .alert("提示", isPresented: Binding(get: { model.noticeMessage != nil }, set: { if !$0 { model.noticeMessage = nil } })) {
+                Button("确定") { model.noticeMessage = nil }
+            } message: {
+                Text(model.noticeMessage ?? "")
+            }
         }
     }
 }

@@ -419,7 +419,7 @@ struct PairingTab: View {
                             Text("AirCard-iOS")
                                 .font(.title2.bold())
                             Spacer()
-                            Text("iOS \(ProcessInfo.processInfo.operatingSystemVersion.majorVersion) · v1.3")
+                            Text("iOS \(ProcessInfo.processInfo.operatingSystemVersion.majorVersion) · v1.1")
                                 .font(.caption.monospaced().bold())
                                 .padding(.horizontal, 8).padding(.vertical, 3)
                                 .background(Color.blue.opacity(0.12))
@@ -699,6 +699,11 @@ struct VPNStatusRow: View {
                     .foregroundStyle(.red)
                     .textSelection(.enabled)
             }
+
+            Label("提示：内置回环需要使用包含 VPN / Network Extension 权限的证书，同时为主 App 和扩展签名。", systemImage: "info.circle")
+                .font(.caption)
+                .foregroundStyle(.orange)
+                .fixedSize(horizontal: false, vertical: true)
 
             HStack(spacing: 8) {
                 Text("Device IP:")
