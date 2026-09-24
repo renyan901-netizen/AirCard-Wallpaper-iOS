@@ -3,16 +3,19 @@ import SwiftUI
 struct WallpaperCatalogView: View {
     @StateObject private var model = WallpaperCatalogModel()
     @State private var paginationTriggerID: Int?
+    @State private var isPaginationSentinelVisible = false
 
     private func reloadCatalog() {
         paginationTriggerID = nil
         Task { await model.load(reset: true) }
     }
 
-    private func loadNextPageIfNeeded(for item: RemoteWallpaper) {
-        guard item.id == model.filteredWallpapers.last?.id,
-              paginationTriggerID != item.id else { return }
-        paginationTriggerID = item.id
+    private func loadNextPageIfNeeded() {
+        guard isPaginationSentinelVisible,
+              !model.isLoading,
+              let lastID = model.filteredWallpapers.last?.id,
+              paginationTriggerID != lastID else { return }
+        paginationTriggerID = lastID
         Task { await model.load() }
     }
 
@@ -30,17 +33,29 @@ struct WallpaperCatalogView: View {
                                 WallpaperCatalogCard(item: item, isDownloading: model.downloadingID == item.id) {
                                     Task { await model.download(item) }
                                 }
-                                .onAppear {
-                                    loadNextPageIfNeeded(for: item)
-                                }
                             }
                         }
                         .padding()
+
+                        Color.clear
+                            .frame(height: 1)
+                            .onAppear {
+                                isPaginationSentinelVisible = true
+                                loadNextPageIfNeeded()
+                            }
+                            .onDisappear {
+                                isPaginationSentinelVisible = false
+                            }
                     }
                     .refreshable {
                         paginationTriggerID = nil
                         await model.load(reset: true)
                     }
+                }
+            }
+            .onChange(of: model.isLoading) { _, isLoading in
+                if !isLoading {
+                    loadNextPageIfNeeded()
                 }
             }
             .navigationTitle("壁纸资源")
