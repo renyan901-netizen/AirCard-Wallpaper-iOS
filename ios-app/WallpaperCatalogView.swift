@@ -85,11 +85,15 @@ private struct WallpaperCatalogCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            CachedWallpaperImage(url: item.thumbURL ?? item.imageURL)
-            .frame(maxWidth: .infinity)
-            .aspectRatio(0.72, contentMode: .fit)
-            .clipped()
-            .clipShape(RoundedRectangle(cornerRadius: 10))
+            Rectangle()
+                .fill(Color.secondary.opacity(0.15))
+                .aspectRatio(0.72, contentMode: .fit)
+                .overlay {
+                    CachedWallpaperImage(url: item.thumbURL ?? item.imageURL)
+                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                }
+                .clipped()
+                .clipShape(RoundedRectangle(cornerRadius: 10))
 
             Text(item.title)
                 .font(.subheadline.weight(.semibold))
