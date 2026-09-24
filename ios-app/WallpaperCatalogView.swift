@@ -91,6 +91,7 @@ private struct WallpaperCatalogCard: View {
                 .overlay {
                     CachedWallpaperImage(url: item.thumbURL ?? item.imageURL)
                         .clipShape(RoundedRectangle(cornerRadius: 10))
+                        .allowsHitTesting(false)
                 }
                 .clipped()
                 .clipShape(RoundedRectangle(cornerRadius: 10))
@@ -109,7 +110,9 @@ private struct WallpaperCatalogCard: View {
                     if isDownloading { ProgressView().controlSize(.small) }
                     else { Image(systemName: "arrow.down.circle.fill") }
                 }
-                .buttonStyle(.borderless)
+                .frame(width: 40, height: 40)
+                .contentShape(Rectangle())
+                .buttonStyle(.plain)
                 .disabled(isDownloading)
                 .accessibilityLabel("下载并导入")
             }
