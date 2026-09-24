@@ -71,13 +71,7 @@ private struct WallpaperCatalogCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            AsyncImage(url: item.thumbURL ?? item.imageURL) { phase in
-                switch phase {
-                case .success(let image): image.resizable().scaledToFill()
-                case .failure: Color.secondary.opacity(0.15).overlay(Image(systemName: "photo"))
-                default: ProgressView()
-                }
-            }
+            CachedWallpaperImage(url: item.thumbURL ?? item.imageURL)
             .frame(maxWidth: .infinity)
             .aspectRatio(0.72, contentMode: .fit)
             .clipped()
