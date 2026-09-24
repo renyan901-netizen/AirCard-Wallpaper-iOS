@@ -62,12 +62,19 @@ struct WallpaperCatalogView: View {
                     loadNextPageIfNeeded()
                 }
             }
-            .onChange(of: appViewModel.selectedTab) { _, selectedTab in
-                guard selectedTab == .wallpaperCatalog else { return }
-                if model.wallpapers.isEmpty {
-                    Task { await model.load(reset: true) }
-                } else {
-                    loadNextPageIfNeeded()
+            .onChange(of: appViewModel.selectedTab) { oldTab, selectedTab in
+                if oldTab == .wallpaperCatalog && selectedTab != .wallpaperCatalog {
+                    paginationTriggerID = nil
+                    isPaginationSentinelVisible = false
+                } else if selectedTab == .wallpaperCatalog {
+                    if model.wallpapers.isEmpty {
+                        Task { await model.load(reset: true) }
+                    } else {
+                        paginationTriggerID = nil
+                        DispatchQueue.main.async {
+                            loadNextPageIfNeeded()
+                        }
+                    }
                 }
             }
             .navigationTitle("壁纸资源")
