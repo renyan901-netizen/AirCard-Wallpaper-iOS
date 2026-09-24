@@ -1,0 +1,404 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		010AC8DF1C1EED48625C6675 /* TendiesModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81FCB10A2F3D7CEAED486771 /* TendiesModel.swift */; };
+		2298380CF8CA245F06A363A1 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D0F9F55D9C9EC2D4AE16F004 /* Assets.xcassets */; };
+		49063A6C03B1966F92F0915B /* AppViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DCB2FCB8D4F45B9474A81BC /* AppViewModel.swift */; };
+		5BCE478E71F6959C81AEF206 /* AirliftFFI.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4FEDEA9266429D393E42942F /* AirliftFFI.xcframework */; };
+		6565B7F0AF43443DACB0FB9D /* NetworkStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 920112F6B415C22F51326996 /* NetworkStatus.swift */; };
+		668FC8BDB3F10AEBFB427382 /* AirCardApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A31F22848A9E3B541A9ADF5 /* AirCardApp.swift */; };
+		771980AD8A57F84F9D2B30DC /* Utilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30060FC4F88D7BF91C2DCD5E /* Utilities.swift */; };
+		80E5245336B574F61E0D3194 /* TendiesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A416E9FC1E5258B289C6DA54 /* TendiesView.swift */; };
+		8AC8E2DE3BA40D3721CFC50D /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 988BAD6580C0B7784B5F4759 /* Models.swift */; };
+		AC3136B63574B3DA733C8214 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E001E5A3AA0793BBC1F623A7 /* ContentView.swift */; };
+		B1A7D31E4F0E4C1B8B1D10A1 /* WallpaperCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1A7D31E4F0E4C1B8B1D10A2 /* WallpaperCatalog.swift */; };
+		B1A7D31E4F0E4C1B8B1D10A3 /* WallpaperCatalogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1A7D31E4F0E4C1B8B1D10A4 /* WallpaperCatalogView.swift */; };
+		D01333FE5D76673B726EC922 /* TendiesEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54463055E9590B0A928A2697 /* TendiesEngine.swift */; };
+		D1372A9BF5FAB71669756638 /* GrappaHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = CCEE0E39AF8DEAE3E55A456C /* GrappaHelper.m */; };
+		E2028685627EA8F9A2BF1732 /* PairingController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A02FDAA5E5C8719C39DA4E6C /* PairingController.swift */; };
+		F425EA3763995D85ABFBB99B /* RespringHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 744597D526DCBE3516400831 /* RespringHelper.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		0A31F22848A9E3B541A9ADF5 /* AirCardApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AirCardApp.swift; sourceTree = "<group>"; };
+		30060FC4F88D7BF91C2DCD5E /* Utilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utilities.swift; sourceTree = "<group>"; };
+		4FEDEA9266429D393E42942F /* AirliftFFI.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = AirliftFFI.xcframework; sourceTree = "<group>"; };
+		54463055E9590B0A928A2697 /* TendiesEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TendiesEngine.swift; sourceTree = "<group>"; };
+		55D5D94AD6F7BB50166EAAA8 /* AirCard-iOS.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = "AirCard-iOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		6DCB2FCB8D4F45B9474A81BC /* AppViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppViewModel.swift; sourceTree = "<group>"; };
+		744597D526DCBE3516400831 /* RespringHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RespringHelper.swift; sourceTree = "<group>"; };
+		81FCB10A2F3D7CEAED486771 /* TendiesModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TendiesModel.swift; sourceTree = "<group>"; };
+		8EF8BF3979E64C5575AD150E /* GrappaHelper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GrappaHelper.h; sourceTree = "<group>"; };
+		920112F6B415C22F51326996 /* NetworkStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkStatus.swift; sourceTree = "<group>"; };
+		988BAD6580C0B7784B5F4759 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		A02FDAA5E5C8719C39DA4E6C /* PairingController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PairingController.swift; sourceTree = "<group>"; };
+		A416E9FC1E5258B289C6DA54 /* TendiesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TendiesView.swift; sourceTree = "<group>"; };
+		CCEE0E39AF8DEAE3E55A456C /* GrappaHelper.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = GrappaHelper.m; sourceTree = "<group>"; };
+		D0F9F55D9C9EC2D4AE16F004 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		E001E5A3AA0793BBC1F623A7 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		B1A7D31E4F0E4C1B8B1D10A2 /* WallpaperCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WallpaperCatalog.swift; sourceTree = "<group>"; };
+		B1A7D31E4F0E4C1B8B1D10A4 /* WallpaperCatalogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WallpaperCatalogView.swift; sourceTree = "<group>"; };
+		FDA40D945A44DA2CF2914BCD /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		324EB3720BE8A9EBC0B20393 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5BCE478E71F6959C81AEF206 /* AirliftFFI.xcframework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		7DE42E877138754E1F23B522 = {
+			isa = PBXGroup;
+			children = (
+				D6E48EFDA14D810D89B9AE80 /* ios-app */,
+				9FDAAD9F5D759830173419E8 /* Frameworks */,
+				98B69CB24A85E2DF841DC0E0 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		98B69CB24A85E2DF841DC0E0 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				55D5D94AD6F7BB50166EAAA8 /* AirCard-iOS.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		9FDAAD9F5D759830173419E8 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				4FEDEA9266429D393E42942F /* AirliftFFI.xcframework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		D6E48EFDA14D810D89B9AE80 /* ios-app */ = {
+			isa = PBXGroup;
+			children = (
+				0A31F22848A9E3B541A9ADF5 /* AirCardApp.swift */,
+				6DCB2FCB8D4F45B9474A81BC /* AppViewModel.swift */,
+				D0F9F55D9C9EC2D4AE16F004 /* Assets.xcassets */,
+				E001E5A3AA0793BBC1F623A7 /* ContentView.swift */,
+				8EF8BF3979E64C5575AD150E /* GrappaHelper.h */,
+				CCEE0E39AF8DEAE3E55A456C /* GrappaHelper.m */,
+				FDA40D945A44DA2CF2914BCD /* Info.plist */,
+				988BAD6580C0B7784B5F4759 /* Models.swift */,
+				920112F6B415C22F51326996 /* NetworkStatus.swift */,
+				A02FDAA5E5C8719C39DA4E6C /* PairingController.swift */,
+				744597D526DCBE3516400831 /* RespringHelper.swift */,
+				54463055E9590B0A928A2697 /* TendiesEngine.swift */,
+				81FCB10A2F3D7CEAED486771 /* TendiesModel.swift */,
+				A416E9FC1E5258B289C6DA54 /* TendiesView.swift */,
+				B1A7D31E4F0E4C1B8B1D10A2 /* WallpaperCatalog.swift */,
+				B1A7D31E4F0E4C1B8B1D10A4 /* WallpaperCatalogView.swift */,
+				30060FC4F88D7BF91C2DCD5E /* Utilities.swift */,
+			);
+			path = "ios-app";
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		0E3055F482CF438EA3978552 /* AirCard-iOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1C28748B0AED86CEC0B68047 /* Build configuration list for PBXNativeTarget "AirCard-iOS" */;
+			buildPhases = (
+				2B0DF449342C616E11569545 /* Sources */,
+				5ADC86378EB6BB9CD4FBD490 /* Resources */,
+				324EB3720BE8A9EBC0B20393 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "AirCard-iOS";
+			packageProductDependencies = (
+			);
+			productName = "AirCard-iOS";
+			productReference = 55D5D94AD6F7BB50166EAAA8 /* AirCard-iOS.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		F4CA90C941CEDE8E3C534F6B /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					0E3055F482CF438EA3978552 = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 57F13D872CCD4C8DAAE6348C /* Build configuration list for PBXProject "AirCard-iOS" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 7DE42E877138754E1F23B522;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 98B69CB24A85E2DF841DC0E0 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				0E3055F482CF438EA3978552 /* AirCard-iOS */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		5ADC86378EB6BB9CD4FBD490 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2298380CF8CA245F06A363A1 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		2B0DF449342C616E11569545 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				668FC8BDB3F10AEBFB427382 /* AirCardApp.swift in Sources */,
+				49063A6C03B1966F92F0915B /* AppViewModel.swift in Sources */,
+				AC3136B63574B3DA733C8214 /* ContentView.swift in Sources */,
+				D1372A9BF5FAB71669756638 /* GrappaHelper.m in Sources */,
+				8AC8E2DE3BA40D3721CFC50D /* Models.swift in Sources */,
+				6565B7F0AF43443DACB0FB9D /* NetworkStatus.swift in Sources */,
+				E2028685627EA8F9A2BF1732 /* PairingController.swift in Sources */,
+				F425EA3763995D85ABFBB99B /* RespringHelper.swift in Sources */,
+				D01333FE5D76673B726EC922 /* TendiesEngine.swift in Sources */,
+				010AC8DF1C1EED48625C6675 /* TendiesModel.swift in Sources */,
+				80E5245336B574F61E0D3194 /* TendiesView.swift in Sources */,
+				B1A7D31E4F0E4C1B8B1D10A /* WallpaperCatalog.swift in Sources */,
+				B1A7D31E4F0E4C1B8B1D10A3 /* WallpaperCatalogView.swift in Sources */,
+				771980AD8A57F84F9D2B30DC /* Utilities.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		00670460AD5802A6A0BF367E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\".\"",
+				);
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "ios-app/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				OTHER_LDFLAGS = "-lc++";
+				PRODUCT_BUNDLE_IDENTIFIER = com.mak5er.aircard;
+				PRODUCT_NAME = "AirCard-iOS";
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		3590F1871D018E2B0817D329 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1.3;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = "";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = x86_64;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MARKETING_VERSION = 1.3;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		4252B1951FEF5FEBB33F0830 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1.3;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = x86_64;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MARKETING_VERSION = 1.3;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		9F0B89CA46E36E2AA00952AD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\".\"",
+				);
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "ios-app/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				OTHER_LDFLAGS = "-lc++";
+				PRODUCT_BUNDLE_IDENTIFIER = com.mak5er.aircard;
+				PRODUCT_NAME = "AirCard-iOS";
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		1C28748B0AED86CEC0B68047 /* Build configuration list for PBXNativeTarget "AirCard-iOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				00670460AD5802A6A0BF367E /* Debug */,
+				9F0B89CA46E36E2AA00952AD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		57F13D872CCD4C8DAAE6348C /* Build configuration list for PBXProject "AirCard-iOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4252B1951FEF5FEBB33F0830 /* Debug */,
+				3590F1871D018E2B0817D329 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = F4CA90C941CEDE8E3C534F6B /* Project object */;
+}
