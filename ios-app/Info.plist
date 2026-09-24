@@ -22,8 +22,6 @@
 	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
-	<key>LicenseAPIBaseURL</key>
-	<string>https://wall-api.18ir.cn/api</string>
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
 		<string>prefs</string>

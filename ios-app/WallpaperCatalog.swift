@@ -147,7 +147,6 @@ final class WallpaperCatalogModel: ObservableObject {
         defer { downloadingID = nil }
 
         do {
-            try await LicenseManager.shared.requireActive()
             let url = try await resolveDownloadURL(for: item)
             let (data, response) = try await session.data(from: url)
             try validate(response, data: data)
