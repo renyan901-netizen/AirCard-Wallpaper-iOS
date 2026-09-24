@@ -1,6 +1,7 @@
 import Foundation
 import Combine
 import Security
+import UIKit
 
 struct RemoteWallpaper: Identifiable, Codable, Equatable {
     let id: Int
@@ -74,6 +75,13 @@ private struct DownloadPayload: Decodable {
     }
 }
 
+private struct FingerprintCandidate {
+    let value: String
+    let source: String
+
+    var hint: String { String(value.prefix(8)) }
+}
+
 @MainActor
 final class WallpaperCatalogModel: ObservableObject {
     @Published private(set) var wallpapers: [RemoteWallpaper] = []
@@ -87,6 +95,9 @@ final class WallpaperCatalogModel: ObservableObject {
     private let session: URLSession
     private let baseURL = URL(string: "https://wall-api.18ir.cn/api")!
     private var page = 1
+    private var fingerprintSource = "未知"
+    private var fingerprintHint = ""
+    private var grantResult = "未执行"
 
     init(session: URLSession = .shared) {
         self.session = session
@@ -152,50 +163,102 @@ final class WallpaperCatalogModel: ObservableObject {
             noticeMessage = "壁纸已加载到导入栏，请手动导入"
             errorMessage = nil
         } catch {
-            errorMessage = "壁纸下载失败：\(error.localizedDescription)"
+            errorMessage = "壁纸下载失败：\(error.localizedDescription)（设备标识：\(fingerprintSource) \(fingerprintHint)；授权请求：\(grantResult)）"
         }
     }
 
     private func resolveDownloadURL(for item: RemoteWallpaper) async throws -> URL {
         if let direct = item.downloadURL { return direct }
 
-        let fingerprint = deviceFingerprint()
+        var lastError = "服务端未返回下载地址"
+        for candidate in deviceFingerprintCandidates() {
+            fingerprintSource = candidate.source
+            fingerprintHint = candidate.hint
 
-        var components = URLComponents(url: baseURL.appendingPathComponent("get_download_url.php"), resolvingAgainstBaseURL: false)!
+            do {
+                try await grantDownloadAuthorization(for: item.id, deviceFingerprint: candidate.value)
+                grantResult = "成功（\(candidate.source)）"
+
+                var components = URLComponents(url: baseURL.appendingPathComponent("get_download_url.php"), resolvingAgainstBaseURL: false)!
+                components.queryItems = [
+                    URLQueryItem(name: "card_id", value: String(item.id)),
+                    URLQueryItem(name: "device_fp", value: candidate.value)
+                ]
+                let (data, response) = try await session.data(from: components.url!)
+                try validate(response, data: data)
+                let decoded = try JSONDecoder().decode(DownloadResponse.self, from: data)
+                if let url = decoded.url ?? decoded.downloadURL ?? decoded.downURL ?? decoded.data?.url ?? decoded.data?.downloadURL ?? decoded.data?.downURL {
+                    return url
+                }
+                lastError = decoded.error ?? decoded.message ?? decoded.data?.message ?? "服务端未返回下载地址"
+            } catch {
+                lastError = error.localizedDescription
+            }
+        }
+
+        if lastError.contains("ad_unlock_required") {
+            throw CatalogError.server("服务器未认可当前设备指纹；下载地址接口要求先完成有效授权")
+        }
+        throw CatalogError.server(lastError)
+    }
+
+    private func grantDownloadAuthorization(for cardID: Int, deviceFingerprint: String) async throws {
+        let timestamp = Int(Date().timeIntervalSince1970)
+        let rawCardID = "\(cardID)|\(timestamp)"
+        let encodedCardID = Data(rawCardID.utf8)
+            .base64EncodedString()
+            .replacingOccurrences(of: "+", with: "-")
+            .replacingOccurrences(of: "/", with: "_")
+
+        var components = URLComponents(url: baseURL.appendingPathComponent("free_unlock_grant.php"), resolvingAgainstBaseURL: false)!
         components.queryItems = [
-            URLQueryItem(name: "card_id", value: String(item.id)),
-            URLQueryItem(name: "device_fp", value: fingerprint)
+            URLQueryItem(name: "card_id", value: encodedCardID),
+            URLQueryItem(name: "device_fp", value: deviceFingerprint)
         ]
         let (data, response) = try await session.data(from: components.url!)
         try validate(response, data: data)
-        let decoded = try JSONDecoder().decode(DownloadResponse.self, from: data)
-        if let url = decoded.url ?? decoded.downloadURL ?? decoded.downURL ?? decoded.data?.url ?? decoded.data?.downloadURL ?? decoded.data?.downURL {
-            return url
+
+        let object = try JSONSerialization.jsonObject(with: data) as? [String: Any]
+        guard object?["ok"] as? Bool == true else {
+            let message = object?["error"] as? String ?? "授权请求失败"
+            throw CatalogError.server(message)
         }
-        throw CatalogError.server(decoded.error ?? decoded.message ?? decoded.data?.message ?? "服务端未返回下载地址")
     }
 
-    private func deviceFingerprint() -> String {
+    private func deviceFingerprintCandidates() -> [FingerprintCandidate] {
         let key = "com.mutually.wallpaper.device"
+        var candidates: [FingerprintCandidate] = []
+
+        func append(_ raw: String?, source: String) {
+            guard let raw, let normalized = normalizedFingerprint(raw),
+                  !candidates.contains(where: { $0.value == normalized }) else { return }
+            candidates.append(FingerprintCandidate(value: normalized, source: source))
+        }
+
+        // Match the original wallpaper app's device identity first, then keep
+        // the persisted Keychain/UserDefaults values as fallbacks.
+        append(UIDevice.current.identifierForVendor?.uuidString, source: "IDFV")
+
         for query in keychainQueries(service: key) {
             var result: CFTypeRef?
             if SecItemCopyMatching(query as CFDictionary, &result) == errSecSuccess,
-               let normalized = fingerprint(from: result) {
-                UserDefaults.standard.set(normalized, forKey: key)
-                return normalized
+               let value = fingerprint(from: result) {
+                append(value, source: "Keychain")
             }
         }
 
         if let existing = UserDefaults.standard.string(forKey: key),
-           let normalized = normalizedFingerprint(existing) {
-            saveFingerprintToKeychain(normalized, service: key)
-            return normalized
+           normalizedFingerprint(existing) != nil {
+            append(existing, source: "UserDefaults")
         }
 
-        let value = UUID().uuidString.replacingOccurrences(of: "-", with: "").lowercased()
-        UserDefaults.standard.set(value, forKey: key)
-        saveFingerprintToKeychain(value, service: key)
-        return value
+        if candidates.isEmpty {
+            let value = UUID().uuidString.replacingOccurrences(of: "-", with: "").lowercased()
+            UserDefaults.standard.set(value, forKey: key)
+            saveFingerprintToKeychain(value, service: key)
+            candidates.append(FingerprintCandidate(value: value, source: "新生成"))
+        }
+        return candidates
     }
 
     private func fingerprint(from result: CFTypeRef?) -> String? {
