@@ -318,17 +318,6 @@ public final class TendiesEngine {
                         log: log
                     )
 
-                    // On iOS 18+, Collections was migrated to com.apple.Posters.CollectionsPosterApp
-                    if descItem.ext == "com.apple.WallpaperKit.CollectionsPoster" {
-                        let modernParentDir = "\(normalizedContainer)/Library/Application Support/PRBPosterExtensionDataStore/\(sVer)/Extensions/com.apple.Posters.CollectionsPosterApp/descriptors"
-                        try? await injectDescriptorFolder(
-                            folderURL: descItem.url,
-                            targetParentDir: modernParentDir,
-                            destName: targetUUID,
-                            pairingPath: pairingPath,
-                            log: log
-                        )
-                    }
                 }
             }
 
