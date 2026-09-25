@@ -476,10 +476,15 @@ public final class TendiesEngine {
         }
     }
 
-    // MARK: - Plist Identifier Randomization (Matches Nugget implementation)
+    // MARK: - Poster Identifier Randomization
 
     private func updatePlistIdentifiers(in folderURL: URL, randomizedID: Int) {
         let fileManager = FileManager.default
+        let descriptorIdentifierURL = folderURL
+            .appendingPathComponent("com.apple.posterkit.provider.descriptor.identifier")
+        let originalIdentifier = (try? String(contentsOf: descriptorIdentifierURL, encoding: .utf8))?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+
         guard let enumerator = fileManager.enumerator(
             at: folderURL,
             includingPropertiesForKeys: [.isRegularFileKey],
@@ -491,24 +496,89 @@ public final class TendiesEngine {
 
             if fileName == "com.apple.posterkit.provider.descriptor.identifier" {
                 try? "\(randomizedID)".data(using: .utf8)?.write(to: fileURL)
-            } else if fileName == "com.apple.posterkit.provider.contents.userInfo" {
-                if let data = try? Data(contentsOf: fileURL),
-                   var plist = (try? PropertyListSerialization.propertyList(from: data, options: .mutableContainers, format: nil)) as? [String: Any] {
-                    plist["wallpaperRepresentingIdentifier"] = randomizedID
-                    if let updated = try? PropertyListSerialization.data(fromPropertyList: plist, format: .binary, options: 0) {
-                        try? updated.write(to: fileURL)
-                    }
-                }
-            } else if fileName.hasSuffix("Wallpaper.plist") {
-                if let data = try? Data(contentsOf: fileURL),
-                   var plist = (try? PropertyListSerialization.propertyList(from: data, options: .mutableContainers, format: nil)) as? [String: Any] {
-                    plist["identifier"] = randomizedID
-                    if let updated = try? PropertyListSerialization.data(fromPropertyList: plist, format: .binary, options: 0) {
-                        try? updated.write(to: fileURL)
-                    }
-                }
+            } else if let originalIdentifier,
+                      fileName == "com.apple.posterkit.provider.contents.userInfo" ||
+                      fileName.hasSuffix("Wallpaper.plist") ||
+                      fileName == "com.apple.posterkit.provider.identifierURL.suggestionMetadata.plist" {
+                rewriteIdentifierReferences(
+                    at: fileURL,
+                    originalIdentifier: originalIdentifier,
+                    randomizedID: randomizedID
+                )
             }
         }
+    }
+
+    private func rewriteIdentifierReferences(
+        at fileURL: URL,
+        originalIdentifier: String,
+        randomizedID: Int
+    ) {
+        guard let data = try? Data(contentsOf: fileURL) else { return }
+
+        var format = PropertyListSerialization.PropertyListFormat.binary
+        guard let plist = try? PropertyListSerialization.propertyList(
+            from: data,
+            options: .mutableContainersAndLeaves,
+            format: &format
+        ) else { return }
+
+        let updatedPlist = replacingIdentifierReferences(
+            in: plist,
+            originalIdentifier: originalIdentifier,
+            randomizedID: randomizedID
+        )
+
+        guard let updatedData = try? PropertyListSerialization.data(
+            fromPropertyList: updatedPlist,
+            format: format,
+            options: 0
+        ) else { return }
+
+        try? updatedData.write(to: fileURL, options: .atomic)
+    }
+
+    private func replacingIdentifierReferences(
+        in value: Any,
+        originalIdentifier: String,
+        randomizedID: Int
+    ) -> Any {
+        if let dictionary = value as? [String: Any] {
+            return dictionary.mapValues {
+                replacingIdentifierReferences(
+                    in: $0,
+                    originalIdentifier: originalIdentifier,
+                    randomizedID: randomizedID
+                )
+            }
+        }
+
+        if let array = value as? [Any] {
+            return array.map {
+                replacingIdentifierReferences(
+                    in: $0,
+                    originalIdentifier: originalIdentifier,
+                    randomizedID: randomizedID
+                )
+            }
+        }
+
+        if let string = value as? String {
+            if string == originalIdentifier {
+                return String(randomizedID)
+            }
+            if string == "\(originalIdentifier).DYNAMIC" {
+                return "\(randomizedID).DYNAMIC"
+            }
+            return string
+        }
+
+        if let number = value as? NSNumber,
+           number.stringValue == originalIdentifier {
+            return NSNumber(value: randomizedID)
+        }
+
+        return value
     }
 
     // MARK: - Folder Injector Helper (Single Atomic Move via AirTraffic)
@@ -597,14 +667,23 @@ public final class TendiesEngine {
             return results
         }
 
-        // 2. Check for "descriptors" or "descriptor" folder
-        for folderName in ["descriptors", "descriptor", "ordered-descriptors", "ordered-descriptor"] {
-            let descDir = rootURL.appendingPathComponent(folderName)
-            if fileManager.fileExists(atPath: descDir.path),
-               let contents = try? fileManager.contentsOfDirectory(at: descDir, includingPropertiesForKeys: [.isDirectoryKey], options: [.skipsHiddenFiles]) {
-                for d in contents where (try? d.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) ?? false {
-                    if !d.lastPathComponent.hasPrefix(".") && d.lastPathComponent != "__MACOSX" {
-                        results.append((ext: defaultExt, url: d))
+        // 2. Match the descriptor groups used by the original wallpaper importer.
+        let descriptorGroups: [([String], String)] = [
+            (["descriptors", "descriptor"], defaultExt),
+            (["ordered-descriptors", "ordered-descriptor"], "com.apple.WallpaperKit.CollectionsPoster"),
+            (["video-descriptors", "video-descriptor", "photos-descriptors", "photos-descriptor"], "com.apple.PhotosUIPrivate.PhotosPosterProvider"),
+            (["mercury-descriptors", "mercury-descriptor"], "com.apple.MercuryPoster")
+        ]
+
+        for (folderNames, extensionIdentifier) in descriptorGroups {
+            for folderName in folderNames {
+                let descDir = rootURL.appendingPathComponent(folderName)
+                if fileManager.fileExists(atPath: descDir.path),
+                   let contents = try? fileManager.contentsOfDirectory(at: descDir, includingPropertiesForKeys: [.isDirectoryKey], options: [.skipsHiddenFiles]) {
+                    for d in contents where (try? d.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) ?? false {
+                        if !d.lastPathComponent.hasPrefix(".") && d.lastPathComponent != "__MACOSX" {
+                            results.append((ext: extensionIdentifier, url: d))
+                        }
                     }
                 }
             }
@@ -613,30 +692,14 @@ public final class TendiesEngine {
             return results
         }
 
-        // 3. Check for "video-descriptors" or "video-descriptor"
-        for folderName in ["video-descriptors", "video-descriptor"] {
-            let descDir = rootURL.appendingPathComponent(folderName)
-            if fileManager.fileExists(atPath: descDir.path),
-               let contents = try? fileManager.contentsOfDirectory(at: descDir, includingPropertiesForKeys: [.isDirectoryKey], options: [.skipsHiddenFiles]) {
-                for d in contents where (try? d.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) ?? false {
-                    if !d.lastPathComponent.hasPrefix(".") && d.lastPathComponent != "__MACOSX" {
-                        results.append((ext: "com.apple.PhotosUIPrivate.PhotosPosterProvider", url: d))
-                    }
-                }
-            }
-        }
-        if !results.isEmpty {
-            return results
-        }
-
-        // 4. Check if root contains versions or Wallpaper.plist
+        // 3. Check if root contains versions or Wallpaper.plist
         if fileManager.fileExists(atPath: rootURL.appendingPathComponent("versions").path) ||
            fileManager.fileExists(atPath: rootURL.appendingPathComponent("Wallpaper.plist").path) ||
            fileManager.fileExists(atPath: rootURL.appendingPathComponent("com.apple.posterkit.provider.descriptor.identifier").path) {
             return [(ext: defaultExt, url: rootURL)]
         }
 
-        // 5. Fallback: scan any subfolder with "versions" or UUID name
+        // 4. Fallback: scan any subfolder with "versions" or UUID name
         if let topLevel = try? fileManager.contentsOfDirectory(at: rootURL, includingPropertiesForKeys: [.isDirectoryKey], options: [.skipsHiddenFiles]) {
             for sub in topLevel where (try? sub.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) ?? false {
                 if !sub.lastPathComponent.hasPrefix(".") && sub.lastPathComponent != "__MACOSX" {
